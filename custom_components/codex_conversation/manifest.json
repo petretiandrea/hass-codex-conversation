@@ -1,0 +1,11 @@
+{
+  "domain": "codex_conversation",
+  "name": "OpenAI Codex Conversation",
+  "version": "0.1.0",
+  "documentation": "https://github.com/",
+  "dependencies": ["auth", "conversation"],
+  "codeowners": [],
+  "requirements": [],
+  "iot_class": "cloud_polling",
+  "config_flow": true
+}

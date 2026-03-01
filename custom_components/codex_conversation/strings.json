@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "OpenAI Codex — Sign in",
+        "description": "Could not reach the OpenAI authorization server. Please retry."
+      },
+      "activate": {
+        "title": "OpenAI Codex — Authorize"
+      },
+      "options": {
+        "title": "OpenAI Codex — Settings",
+        "data": {
+          "model": "Model"
+        }
+      }
+    },
+    "progress": {
+      "waiting_for_auth": "Open the following URL in your browser and sign in with your OpenAI account (ChatGPT Plus or Pro required):\n\n[{url}]({url})\n\nIf the page asks for a code, enter:\n\n```{code}```\n\nThis dialog will advance automatically once authorized."
+    },
+    "error": {
+      "token_exchange_failed": "Could not reach the OpenAI authorisation server. Please try again."
+    },
+    "abort": {
+      "already_configured":    "OpenAI Codex is already configured.",
+      "oauth_error":           "OpenAI returned an authentication error. Please try again.",
+      "token_exchange_failed": "Token exchange failed. Please try again."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "OpenAI Codex — Settings",
+        "data": {
+          "model": "Model"
+        }
+      }
+    }
+  }
+}

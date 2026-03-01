@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Home Assistant on port 9123",
+      "type": "shell",
+      "command": ".devcontainer/start.sh run",
+      "problemMatcher": []
+    },
+    {
+      "label": "Install a specific version of Home Assistant",
+      "type": "shell",
+      "command": ".devcontainer/start.sh setversion",
+      "problemMatcher": []
+    }
+  ]
+}

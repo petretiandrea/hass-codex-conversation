@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "OpenAI Codex — Accesso",
+        "description": "Impossibile raggiungere il server di autorizzazione OpenAI. Riprova."
+      },
+      "activate": {
+        "title": "OpenAI Codex — Autorizza"
+      },
+      "options": {
+        "title": "OpenAI Codex — Impostazioni",
+        "data": {
+          "model": "Modello"
+        }
+      }
+    },
+    "progress": {
+      "waiting_for_auth": "Apri il seguente link nel browser e accedi con il tuo account OpenAI (ChatGPT Plus o Pro richiesto):\n\n[{url}]({url})\n\nSe la pagina chiede un codice, inserisci:\n\n```{code}```\n\nQuesta finestra avanzerà automaticamente una volta completata l'autorizzazione."
+    },
+    "error": {
+      "token_exchange_failed": "Impossibile raggiungere il server di autenticazione OpenAI. Riprova."
+    },
+    "abort": {
+      "already_configured":    "OpenAI Codex è già configurato.",
+      "oauth_error":           "OpenAI ha restituito un errore di autenticazione. Riprova.",
+      "token_exchange_failed": "Scambio token fallito. Riprova."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "OpenAI Codex — Impostazioni",
+        "data": {
+          "model": "Modello"
+        }
+      }
+    }
+  }
+}

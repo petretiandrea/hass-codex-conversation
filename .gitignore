@@ -1,0 +1,14 @@
+__pycache__
+pythonenv*
+.python-version
+.coverage
+venv
+.venv
+
+coverage_re/
+pytest-coverage.txt
+pytest.xml
+
+.idea/
+
+.claude/
