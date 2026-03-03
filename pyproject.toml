@@ -34,6 +34,26 @@ force-sort-within-sections = true
 known-first-party = ["custom_components.codex_conversation"]
 combine-as-imports = true
 
+# ── Semantic Release ───────────────────────────────────────────────────────────
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+tag_format = "v{version}"
+commit_message = "chore(release): {version} [skip ci]"
+build_command = "python scripts/sync_version.py"
+
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease = false
+
+[tool.semantic_release.remote]
+name = "origin"
+type = "github"
+
+[tool.semantic_release.publish]
+dist_glob_patterns = []
+upload_to_vcs_release = false
+
 # ── Pytest ─────────────────────────────────────────────────────────────────────
 
 [tool.pytest.ini_options]
