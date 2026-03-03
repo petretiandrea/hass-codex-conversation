@@ -16,14 +16,14 @@ All public symbols are re-exported here so that callers can simply write::
 from __future__ import annotations
 
 from .auth import (
-    AbstractAuth,
     CLIENT_ID,
+    TOKEN_URL,
+    VERIFICATION_URL,
+    AbstractAuth,
     CodexAuth,
     CodexDeviceFlow,
     DeviceCodeInfo,
     OAuthToken,
-    TOKEN_URL,
-    VERIFICATION_URL,
 )
 from .client import CODEX_ENDPOINT, CodexClient
 from .errors import (

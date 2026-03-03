@@ -1,4 +1,5 @@
 """Shared fixtures for the Codex Conversation integration tests."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
@@ -6,17 +7,20 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.codex_conversation.const import DOMAIN, RECOMMENDED_CONVERSATION_OPTIONS
+from custom_components.codex_conversation.const import (
+    DOMAIN,
+    RECOMMENDED_CONVERSATION_OPTIONS,
+)
 from custom_components.codex_conversation.conversation import CodexConversationEntity
 
 ENTRY_ID = "test_entry_id"
 
 TOKEN_DICT = {
-    "access_token":  "test_access_token",
+    "access_token": "test_access_token",
     "refresh_token": "test_refresh_token",
-    "account_id":    "test_account_id",
-    "expires_at":    9_999_999_999.0,
-    "expires_in":    3600,
+    "account_id": "test_account_id",
+    "expires_at": 9_999_999_999.0,
+    "expires_in": 3600,
 }
 
 
@@ -51,6 +55,7 @@ def mock_entity(hass, mock_config_entry, mock_oauth_session) -> CodexConversatio
 
 # ── ChatLog helpers ────────────────────────────────────────────────────────────
 
+
 async def drain_generator(entity_id, gen):
     """Async-generator drop-in for ChatLog.async_add_delta_content_stream.
 
@@ -61,7 +66,6 @@ async def drain_generator(entity_id, gen):
     async for _ in gen:
         pass
     return
-    yield  # noqa: unreachable — makes Python parse this as an async generator
 
 
 def make_chat_log(content: list, *, llm_api=None, unresponded=False) -> MagicMock:

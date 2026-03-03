@@ -9,7 +9,13 @@ codex_api.auth — OAuth2 and authentication helpers.
 from __future__ import annotations
 
 from .base import AbstractAuth, CodexAuth
-from .device_flow import CLIENT_ID, TOKEN_URL, VERIFICATION_URL, CodexDeviceFlow, DeviceCodeInfo
+from .device_flow import (
+    CLIENT_ID,
+    TOKEN_URL,
+    VERIFICATION_URL,
+    CodexDeviceFlow,
+    DeviceCodeInfo,
+)
 from .token import OAuthToken, refresh_token
 
 __all__ = [

@@ -17,10 +17,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .codex_api.auth import AbstractAuth, CLIENT_ID, OAuthToken, TOKEN_URL, refresh_token
+from .codex_api.auth import (
+    CLIENT_ID,
+    TOKEN_URL,
+    AbstractAuth,
+    OAuthToken,
+    refresh_token,
+)
 from .codex_api.client import CODEX_ENDPOINT
 from .const import DOMAIN
-
 
 # ── HA-aware AbstractAuth implementation ───────────────────────────────────────
 

@@ -1,12 +1,10 @@
 """Tests for the conversation entity and its helper functions."""
+
 from __future__ import annotations
 
-import json
 from datetime import date, datetime
+import json
 from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant.components.conversation import (
     AssistantContent,
@@ -16,6 +14,8 @@ from homeassistant.components.conversation import (
     UserContent,
 )
 from homeassistant.helpers import llm
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.codex_conversation.codex_api import (
     CodexApiError,
@@ -41,14 +41,16 @@ from custom_components.codex_conversation.conversation import (
 
 from .conftest import make_chat_log
 
-
 # ── _extract_instructions ──────────────────────────────────────────────────────
 
+
 def test_extract_instructions_returns_system_content():
-    chat_log = make_chat_log([
-        SystemContent(content="You are helpful."),
-        UserContent(content="Hi"),
-    ])
+    chat_log = make_chat_log(
+        [
+            SystemContent(content="You are helpful."),
+            UserContent(content="Hi"),
+        ]
+    )
     assert _extract_instructions(chat_log) == "You are helpful."
 
 
@@ -58,14 +60,17 @@ def test_extract_instructions_returns_empty_when_no_system():
 
 
 def test_extract_instructions_returns_first_system_only():
-    chat_log = make_chat_log([
-        SystemContent(content="First"),
-        SystemContent(content="Second"),
-    ])
+    chat_log = make_chat_log(
+        [
+            SystemContent(content="First"),
+            SystemContent(content="Second"),
+        ]
+    )
     assert _extract_instructions(chat_log) == "First"
 
 
 # ── _build_input_items ─────────────────────────────────────────────────────────
+
 
 def test_build_input_items_user_message():
     chat_log = make_chat_log([UserContent(content="Hello")])
@@ -80,10 +85,12 @@ def test_build_input_items_user_message():
 
 
 def test_build_input_items_skips_system_content():
-    chat_log = make_chat_log([
-        SystemContent(content="System prompt"),
-        UserContent(content="Hello"),
-    ])
+    chat_log = make_chat_log(
+        [
+            SystemContent(content="System prompt"),
+            UserContent(content="Hello"),
+        ]
+    )
     items = _build_input_items(chat_log)
 
     assert len(items) == 1
@@ -91,9 +98,11 @@ def test_build_input_items_skips_system_content():
 
 
 def test_build_input_items_assistant_text():
-    chat_log = make_chat_log([
-        AssistantContent(content="I'm here to help.", tool_calls=None),
-    ])
+    chat_log = make_chat_log(
+        [
+            AssistantContent(content="I'm here to help.", tool_calls=None),
+        ]
+    )
     items = _build_input_items(chat_log)
 
     assert len(items) == 1
@@ -110,7 +119,9 @@ def test_build_input_items_assistant_empty_content_skipped():
 
 
 def test_build_input_items_assistant_tool_calls():
-    tool_call = llm.ToolInput(id="call_1", tool_name="turn_on", tool_args={"entity_id": "light.living_room"})
+    tool_call = llm.ToolInput(
+        id="call_1", tool_name="turn_on", tool_args={"entity_id": "light.living_room"}
+    )
     chat_log = make_chat_log([AssistantContent(content=None, tool_calls=[tool_call])])
     items = _build_input_items(chat_log)
 
@@ -135,9 +146,11 @@ def test_build_input_items_multiple_tool_calls():
 
 
 def test_build_input_items_tool_result():
-    chat_log = make_chat_log([
-        ToolResultContent(tool_call_id="call_1", tool_result={"success": True}),
-    ])
+    chat_log = make_chat_log(
+        [
+            ToolResultContent(tool_call_id="call_1", tool_result={"success": True}),
+        ]
+    )
     items = _build_input_items(chat_log)
 
     assert len(items) == 1
@@ -148,9 +161,13 @@ def test_build_input_items_tool_result():
 
 def test_build_input_items_tool_result_with_date_value():
     """date objects in tool_result must be serialised as ISO strings."""
-    chat_log = make_chat_log([
-        ToolResultContent(tool_call_id="c1", tool_result={"today": date(2026, 3, 3)}),
-    ])
+    chat_log = make_chat_log(
+        [
+            ToolResultContent(
+                tool_call_id="c1", tool_result={"today": date(2026, 3, 3)}
+            ),
+        ]
+    )
     items = _build_input_items(chat_log)
     output = json.loads(items[0]["output"])
     assert output["today"] == "2026-03-03"
@@ -159,13 +176,15 @@ def test_build_input_items_tool_result_with_date_value():
 def test_build_input_items_full_conversation():
     """Multi-turn conversation with tool call round-trip."""
     tool_call = llm.ToolInput(id="c1", tool_name="get_time", tool_args={})
-    chat_log = make_chat_log([
-        SystemContent(content="System"),
-        UserContent(content="What time is it?"),
-        AssistantContent(content=None, tool_calls=[tool_call]),
-        ToolResultContent(tool_call_id="c1", tool_result={"time": "15:00"}),
-        AssistantContent(content="It's 3pm.", tool_calls=None),
-    ])
+    chat_log = make_chat_log(
+        [
+            SystemContent(content="System"),
+            UserContent(content="What time is it?"),
+            AssistantContent(content=None, tool_calls=[tool_call]),
+            ToolResultContent(tool_call_id="c1", tool_result={"time": "15:00"}),
+            AssistantContent(content="It's 3pm.", tool_calls=None),
+        ]
+    )
     items = _build_input_items(chat_log)
 
     types = [i["type"] for i in items]
@@ -175,6 +194,7 @@ def test_build_input_items_full_conversation():
 
 
 # ── _json_default ──────────────────────────────────────────────────────────────
+
 
 def test_json_default_date():
     assert _json_default(date(2026, 3, 3)) == "2026-03-03"
@@ -193,6 +213,7 @@ def test_json_default_fallback_to_str():
 
 
 # ── _format_tool ───────────────────────────────────────────────────────────────
+
 
 def test_format_tool():
     import voluptuous as vol
@@ -225,12 +246,15 @@ def test_format_tool_empty_description():
 
 # ── _async_handle_message — integration ───────────────────────────────────────
 
+
 async def test_handle_message_simple_text(mock_entity):
     """Happy path: model streams text, entity returns a ConversationResult."""
-    chat_log = make_chat_log([
-        SystemContent(content="You are helpful."),
-        UserContent(content="Hello"),
-    ])
+    chat_log = make_chat_log(
+        [
+            SystemContent(content="You are helpful."),
+            UserContent(content="Hello"),
+        ]
+    )
     user_input = MagicMock()
     user_input.as_llm_context.return_value = MagicMock()
     user_input.extra_system_prompt = None
@@ -240,12 +264,15 @@ async def test_handle_message_simple_text(mock_entity):
     async def fake_stream(request):
         yield OutputTextDelta(delta="Hi there!", content_index=0)
 
-    with patch(
-        "custom_components.codex_conversation.conversation.CodexClient"
-    ) as MockClient, patch(
-        "custom_components.codex_conversation.conversation.conversation"
-        ".async_get_result_from_chat_log",
-        return_value=expected,
+    with (
+        patch(
+            "custom_components.codex_conversation.conversation.CodexClient"
+        ) as MockClient,
+        patch(
+            "custom_components.codex_conversation.conversation.conversation"
+            ".async_get_result_from_chat_log",
+            return_value=expected,
+        ),
     ):
         MockClient.return_value.stream = fake_stream
         result = await mock_entity._async_handle_message(user_input, chat_log)
@@ -256,7 +283,6 @@ async def test_handle_message_simple_text(mock_entity):
 
 async def test_handle_message_uses_model_from_options(hass, mock_oauth_session):
     """The CodexRequest model must come from entry.options."""
-    from pytest_homeassistant_custom_component.common import MockConfigEntry
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -264,7 +290,10 @@ async def test_handle_message_uses_model_from_options(hass, mock_oauth_session):
         data={"auth_implementation": DOMAIN, "token": {}},
         options={**RECOMMENDED_CONVERSATION_OPTIONS, CONF_MODEL: "gpt-5.3-codex"},
     )
-    from custom_components.codex_conversation.conversation import CodexConversationEntity
+    from custom_components.codex_conversation.conversation import (
+        CodexConversationEntity,
+    )
+
     entity = CodexConversationEntity(hass, entry, mock_oauth_session)
     entity.entity_id = "conversation.test"
     entity.hass = hass
@@ -280,12 +309,15 @@ async def test_handle_message_uses_model_from_options(hass, mock_oauth_session):
     user_input.as_llm_context.return_value = MagicMock()
     user_input.extra_system_prompt = None
 
-    with patch(
-        "custom_components.codex_conversation.conversation.CodexClient"
-    ) as MockClient, patch(
-        "custom_components.codex_conversation.conversation.conversation"
-        ".async_get_result_from_chat_log",
-        return_value=MagicMock(),
+    with (
+        patch(
+            "custom_components.codex_conversation.conversation.CodexClient"
+        ) as MockClient,
+        patch(
+            "custom_components.codex_conversation.conversation.conversation"
+            ".async_get_result_from_chat_log",
+            return_value=MagicMock(),
+        ),
     ):
         MockClient.return_value.stream = capturing_stream
         await entity._async_handle_message(user_input, chat_log)
@@ -294,13 +326,16 @@ async def test_handle_message_uses_model_from_options(hass, mock_oauth_session):
     assert captured[0].model == "gpt-5.3-codex"
 
 
-@pytest.mark.parametrize("error_cls,args", [
-    (CodexApiError, (503, "Service unavailable")),
-    (CodexContextWindowExceeded, ("Too long",)),
-    (CodexQuotaExceeded, ("Quota exceeded",)),
-    (CodexRateLimited, ("Rate limited",)),
-    (CodexServerOverloaded, ("Overloaded",)),
-])
+@pytest.mark.parametrize(
+    "error_cls,args",
+    [
+        (CodexApiError, (503, "Service unavailable")),
+        (CodexContextWindowExceeded, ("Too long",)),
+        (CodexQuotaExceeded, ("Quota exceeded",)),
+        (CodexRateLimited, ("Rate limited",)),
+        (CodexServerOverloaded, ("Overloaded",)),
+    ],
+)
 async def test_handle_message_api_errors_raise_converse_error(
     mock_entity, error_cls, args
 ):
@@ -312,7 +347,6 @@ async def test_handle_message_api_errors_raise_converse_error(
 
     async def error_stream(request):
         raise error_cls(*args)
-        yield  # noqa: unreachable
 
     with patch(
         "custom_components.codex_conversation.conversation.CodexClient"
@@ -346,8 +380,6 @@ async def test_handle_message_tool_call_loop(mock_entity):
     # Override unresponded_tool_results to change between iterations
     side_effects = iter(unresponded_sequence)
 
-    original_drain = chat_log.async_add_delta_content_stream
-
     async def drain_and_flip(entity_id, gen):
         async for _ in gen:
             pass
@@ -361,12 +393,15 @@ async def test_handle_message_tool_call_loop(mock_entity):
     user_input.as_llm_context.return_value = MagicMock()
     user_input.extra_system_prompt = None
 
-    with patch(
-        "custom_components.codex_conversation.conversation.CodexClient"
-    ) as MockClient, patch(
-        "custom_components.codex_conversation.conversation.conversation"
-        ".async_get_result_from_chat_log",
-        return_value=MagicMock(),
+    with (
+        patch(
+            "custom_components.codex_conversation.conversation.CodexClient"
+        ) as MockClient,
+        patch(
+            "custom_components.codex_conversation.conversation.conversation"
+            ".async_get_result_from_chat_log",
+            return_value=MagicMock(),
+        ),
     ):
         MockClient.return_value.stream = tool_then_text
         await mock_entity._async_handle_message(user_input, chat_log)

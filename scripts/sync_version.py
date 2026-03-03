@@ -6,8 +6,8 @@ pyproject.toml. Since psr does `git add -u` before the version commit,
 the manifest change is included in the same release commit.
 """
 import json
-import tomllib
 from pathlib import Path
+import tomllib
 
 root = Path(__file__).parent.parent
 

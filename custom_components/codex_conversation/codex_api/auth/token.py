@@ -1,8 +1,8 @@
 """Token types, refresh and normalisation helpers."""
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass
+import time
 
 import aiohttp
 

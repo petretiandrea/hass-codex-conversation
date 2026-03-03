@@ -5,9 +5,12 @@ import asyncio
 import logging
 from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import callback
 from homeassistant.helpers import llm
@@ -17,8 +20,9 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     TemplateSelector,
 )
+import voluptuous as vol
 
-from .codex_api.auth import CodexDeviceFlow, OAuthToken, VERIFICATION_URL
+from .codex_api.auth import VERIFICATION_URL, CodexDeviceFlow, OAuthToken
 from .const import (
     CONF_MODEL,
     CONF_PROMPT,
