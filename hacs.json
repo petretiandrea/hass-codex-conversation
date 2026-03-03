@@ -2,5 +2,5 @@
   "name": "Codex Converation",
   "hacs": "0.0.1",
   "render_readme": true,
-  "homeassistant": "2026.1.0"
+  "homeassistant": "2026.2.0"
 }
