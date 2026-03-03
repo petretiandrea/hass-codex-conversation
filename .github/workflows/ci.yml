@@ -27,7 +27,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install test dependencies
-        run: uv sync --group dev
+        run: uv sync --frozen --group dev
 
       - name: Run tests
         run: uv run pytest tests/ -v --tb=short
@@ -45,7 +45,7 @@ jobs:
           enable-cache: true
 
       - name: Install dev dependencies
-        run: uv sync --group dev
+        run: uv sync --frozen --group dev
 
       - name: Ruff check
         run: uv run ruff check .
