@@ -8,6 +8,18 @@ import aiohttp
 
 from .token import OAuthToken
 
+# ── Codex OAuth endpoints & credentials ───────────────────────────────────────
+
+CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann"
+_ISSUER   = "https://auth.openai.com"
+_AUTH_BASE = f"{_ISSUER}/api/accounts"
+
+USERCODE_URL     = f"{_AUTH_BASE}/deviceauth/usercode"
+POLL_URL         = f"{_AUTH_BASE}/deviceauth/token"
+TOKEN_URL        = f"{_ISSUER}/oauth/token"
+REDIRECT_URI     = f"{_ISSUER}/deviceauth/callback"
+VERIFICATION_URL = f"{_ISSUER}/codex/device"   # URL shown to the user
+
 
 @dataclass
 class DeviceCodeInfo:
@@ -32,8 +44,7 @@ class CodexDeviceFlow:
 
     Example::
 
-        flow = CodexDeviceFlow(session, CLIENT_ID, USERCODE_URL,
-                               DEVICE_POLL_URL, TOKEN_URL, DEVICE_REDIRECT)
+        flow = CodexDeviceFlow(session)
         info = await flow.initialize()
         print(f"Go to {VERIFICATION_URL} and enter: {info.user_code}")
 
@@ -44,11 +55,11 @@ class CodexDeviceFlow:
     def __init__(
         self,
         session: aiohttp.ClientSession,
-        client_id: str,
-        usercode_url: str,
-        poll_url: str,
-        token_url: str,
-        redirect_uri: str,
+        client_id: str = CLIENT_ID,
+        usercode_url: str = USERCODE_URL,
+        poll_url: str = POLL_URL,
+        token_url: str = TOKEN_URL,
+        redirect_uri: str = REDIRECT_URI,
     ) -> None:
         self._session = session
         self._client_id = client_id

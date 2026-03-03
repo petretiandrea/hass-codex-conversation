@@ -17,10 +17,13 @@ from __future__ import annotations
 
 from .auth import (
     AbstractAuth,
+    CLIENT_ID,
     CodexAuth,
     CodexDeviceFlow,
     DeviceCodeInfo,
     OAuthToken,
+    TOKEN_URL,
+    VERIFICATION_URL,
 )
 from .client import CODEX_ENDPOINT, CodexClient
 from .errors import (
@@ -34,6 +37,9 @@ from .errors import (
     CodexUsageNotIncluded,
 )
 from .models import (
+    FunctionCallAdded,
+    FunctionCallArgumentsDelta,
+    FunctionCallArgumentsDone,
     OutputItemAdded,
     OutputItemDone,
     OutputTextDelta,
@@ -49,6 +55,9 @@ from .requests import CodexRequest
 __all__ = [
     # auth
     "AbstractAuth",
+    "CLIENT_ID",
+    "TOKEN_URL",
+    "VERIFICATION_URL",
     "CodexAuth",
     "CodexDeviceFlow",
     "DeviceCodeInfo",
@@ -74,6 +83,9 @@ __all__ = [
     "OutputItemDone",
     "ResponseCompleted",
     "RateLimits",
+    "FunctionCallAdded",
+    "FunctionCallArgumentsDelta",
+    "FunctionCallArgumentsDone",
     "ResponseEvent",
     # requests
     "CodexRequest",

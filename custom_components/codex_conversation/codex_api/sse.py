@@ -23,6 +23,9 @@ from .errors import (
     CodexUsageNotIncluded,
 )
 from .models import (
+    FunctionCallAdded,
+    FunctionCallArgumentsDelta,
+    FunctionCallArgumentsDone,
     OutputItemAdded,
     OutputItemDone,
     OutputTextDelta,
@@ -95,10 +98,31 @@ def parse_event(data_str: str) -> ResponseEvent | None:
     # ── output items ───────────────────────────────────────────────────────────
 
     if etype == "response.output_item.added":
-        return OutputItemAdded(item=evt.get("item") or {})
+        item = evt.get("item") or {}
+        if item.get("type") == "function_call":
+            return FunctionCallAdded(
+                call_id=item.get("call_id", ""),
+                name=item.get("name", ""),
+                item_id=item.get("id", ""),
+            )
+        return OutputItemAdded(item=item)
 
     if etype == "response.output_item.done":
         return OutputItemDone(item=evt.get("item") or {})
+
+    # ── function call arguments ────────────────────────────────────────────────
+
+    if etype == "response.function_call_arguments.delta":
+        return FunctionCallArgumentsDelta(
+            delta=evt.get("delta", ""),
+            item_id=evt.get("item_id", ""),
+        )
+
+    if etype == "response.function_call_arguments.done":
+        return FunctionCallArgumentsDone(
+            arguments=evt.get("arguments", ""),
+            item_id=evt.get("item_id", ""),
+        )
 
     # ── text streaming ─────────────────────────────────────────────────────────
 
@@ -119,7 +143,7 @@ def parse_event(data_str: str) -> ResponseEvent | None:
         )
         return ReasoningContentDelta(delta=text)
 
-    if etype == "response.reasoning_summary.delta":
+    if etype in ("response.reasoning_summary.delta", "response.reasoning_summary_text.delta"):
         return ReasoningSummaryDelta(
             delta=evt.get("delta", ""),
             summary_index=evt.get("summary_index", 0),
@@ -138,6 +162,19 @@ def parse_event(data_str: str) -> ResponseEvent | None:
             err.get("code", "unknown_error"),
             err.get("message", "Streaming error"),
         )
+
+    # ── known lifecycle events (no payload we care about) ─────────────────────
+
+    if etype in (
+        "response.in_progress",
+        "response.content_part.added",
+        "response.content_part.done",
+        "response.output_text.done",
+        "response.reasoning_summary_part.added",
+        "response.reasoning_summary_part.done",
+        "response.reasoning_summary_text.done",
+    ):
+        return None
 
     _LOGGER.debug("codex_api.sse: unknown event type %r", etype)
     return None

@@ -60,6 +60,28 @@ class RateLimits:
     data: list[dict[str, Any]] = field(default_factory=list)
 
 
+@dataclass
+class FunctionCallAdded:
+    """A function-call output item has been added to the response."""
+    call_id: str
+    name: str
+    item_id: str
+
+
+@dataclass
+class FunctionCallArgumentsDelta:
+    """Incremental chunk of function-call arguments JSON."""
+    delta: str
+    item_id: str
+
+
+@dataclass
+class FunctionCallArgumentsDone:
+    """Function-call arguments streaming completed; ``arguments`` is the full JSON string."""
+    arguments: str
+    item_id: str
+
+
 # Convenience union — use with isinstance() checks
 ResponseEvent = Union[
     ResponseCreated,
@@ -70,4 +92,7 @@ ResponseEvent = Union[
     OutputItemDone,
     ResponseCompleted,
     RateLimits,
+    FunctionCallAdded,
+    FunctionCallArgumentsDelta,
+    FunctionCallArgumentsDone,
 ]

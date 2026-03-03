@@ -3,7 +3,7 @@ name = "hass-codex-conversation"
 version = "0.1.0"
 description = "Home Assistant custom integration for OpenAI Codex"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13.2"
 dependencies = []   # runtime deps are managed by Home Assistant itself
 
 [dependency-groups]
@@ -15,9 +15,8 @@ dev = [
 ]
 test = [
     { include-group = "dev" },
-    "pytest-homeassistant-custom-component==0.13.109",
+    "pytest-homeassistant-custom-component==0.13.305",
     "pytest-asyncio>=0.23.4",
-    "pytest-cov>=5.0.0",
     "async-timeout>=4.0.2",
 ]
 

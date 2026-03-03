@@ -7,12 +7,6 @@
       },
       "activate": {
         "title": "OpenAI Codex — Authorize"
-      },
-      "options": {
-        "title": "OpenAI Codex — Settings",
-        "data": {
-          "model": "Model"
-        }
       }
     },
     "progress": {
@@ -32,7 +26,27 @@
       "init": {
         "title": "OpenAI Codex — Settings",
         "data": {
-          "model": "Model"
+          "recommended": "Recommended model settings",
+          "llm_hass_api": "Home Assistant API",
+          "prompt": "System prompt"
+        },
+        "data_description": {
+          "prompt": "Instruct how the model should respond. This can be a template.",
+          "llm_hass_api": "Select the Home Assistant API to expose to the model."
+        }
+      },
+      "advanced": {
+        "title": "Advanced settings",
+        "data": {
+          "model": "Model",
+          "reasoning_effort": "Reasoning effort",
+          "reasoning_summary": "Reasoning summary",
+          "text_verbosity": "Text verbosity"
+        },
+        "data_description": {
+          "reasoning_effort": "How many reasoning tokens the model should generate before responding.",
+          "reasoning_summary": "Controls the length and detail of the reasoning summary.",
+          "text_verbosity": "Controls the verbosity of the model's text output."
         }
       }
     }

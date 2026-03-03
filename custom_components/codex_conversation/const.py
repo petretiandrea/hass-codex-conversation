@@ -1,19 +1,8 @@
 """Constants for the OpenAI Codex Conversation integration."""
+from homeassistant.const import CONF_LLM_HASS_API  # noqa: F401
+from homeassistant.helpers import llm
 
 DOMAIN = "codex_conversation"
-
-# OAuth — Codex Device Code Auth
-CLIENT_ID        = "app_EMoamEEZ73f0CkXaXp7hrann"
-_ISSUER          = "https://auth.openai.com"
-_AUTH_BASE       = f"{_ISSUER}/api/accounts"
-USERCODE_URL     = f"{_AUTH_BASE}/deviceauth/usercode"   # POST → device_auth_id, user_code
-DEVICE_POLL_URL  = f"{_AUTH_BASE}/deviceauth/token"      # POST → authorization_code, code_verifier
-TOKEN_URL        = f"{_ISSUER}/oauth/token"              # final exchange + refresh
-DEVICE_REDIRECT  = f"{_ISSUER}/deviceauth/callback"      # redirect_uri for code exchange
-VERIFICATION_URL = f"{_ISSUER}/codex/device"             # URL shown to the user
-
-# API
-CODEX_ENDPOINT = "https://chatgpt.com/backend-api/codex/responses"
 
 MODELS = [
     "gpt-5.1-codex",
@@ -22,14 +11,26 @@ MODELS = [
     "gpt-5.1-codex-mini",
 ]
 
-# Config entry keys (stored encrypted by HA)
-CONF_ACCESS_TOKEN  = "access_token"
-CONF_REFRESH_TOKEN = "refresh_token"
-CONF_ACCOUNT_ID    = "account_id"
-CONF_EXPIRES_AT    = "expires_at"
-
 # Options keys
-CONF_MODEL    = "model"
+CONF_MODEL             = "model"
+CONF_RECOMMENDED       = "recommended"
+CONF_PROMPT            = "prompt"
+CONF_REASONING_EFFORT  = "reasoning_effort"
+CONF_REASONING_SUMMARY = "reasoning_summary"
+CONF_TEXT_VERBOSITY    = "text_verbosity"
 
 # Defaults
-DEFAULT_MODEL = "gpt-5.1-codex"
+DEFAULT_MODEL                = "gpt-5.1-codex"
+RECOMMENDED_REASONING_EFFORT  = "medium"
+RECOMMENDED_REASONING_SUMMARY = "auto"
+RECOMMENDED_TEXT_VERBOSITY    = "medium"
+
+RECOMMENDED_CONVERSATION_OPTIONS: dict = {
+    CONF_RECOMMENDED:        True,
+    CONF_LLM_HASS_API:       [llm.LLM_API_ASSIST],
+    CONF_PROMPT:             llm.DEFAULT_INSTRUCTIONS_PROMPT,
+    CONF_MODEL:              DEFAULT_MODEL,
+    CONF_REASONING_EFFORT:   RECOMMENDED_REASONING_EFFORT,
+    CONF_REASONING_SUMMARY:  RECOMMENDED_REASONING_SUMMARY,
+    CONF_TEXT_VERBOSITY:     RECOMMENDED_TEXT_VERBOSITY,
+}

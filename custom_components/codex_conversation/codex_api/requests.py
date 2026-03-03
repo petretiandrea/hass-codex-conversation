@@ -33,6 +33,7 @@ class CodexRequest:
     reasoning_effort: str = "medium"
     reasoning_summary: str = "auto"
     text_verbosity: str = "medium"
+    tools: list[dict[str, Any]] = field(default_factory=list)
 
     def _is_reasoning_model(self) -> bool:
         return self.model.startswith(("gpt-5", "o"))
@@ -47,6 +48,8 @@ class CodexRequest:
         }
         if self.instructions:
             body["instructions"] = self.instructions
+        if self.tools:
+            body["tools"] = self.tools
         if self._is_reasoning_model():
             body["reasoning"] = {
                 "effort": self.reasoning_effort,
