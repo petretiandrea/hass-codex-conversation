@@ -1,4 +1,5 @@
 """JWT decoding utilities — no external dependencies beyond the stdlib."""
+
 from __future__ import annotations
 
 import base64

@@ -10,6 +10,7 @@ Provides two classes:
 - ``CodexOAuth2Implementation`` — thin ``LocalOAuth2Implementation`` subclass
   that wires the Codex token-refresh HTTP call into HA's OAuth2 machinery.
 """
+
 from __future__ import annotations
 
 import aiohttp
@@ -28,6 +29,7 @@ from .codex_api.client import CODEX_ENDPOINT
 from .const import DOMAIN
 
 # ── HA-aware AbstractAuth implementation ───────────────────────────────────────
+
 
 class CodexHAAuth(AbstractAuth):
     """``AbstractAuth`` backed by an HA ``OAuth2Session``.
@@ -55,6 +57,7 @@ class CodexHAAuth(AbstractAuth):
 
 # ── HA OAuth2 token-refresh implementation ─────────────────────────────────────
 
+
 class CodexOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
     """Minimal ``LocalOAuth2Implementation`` — only the refresh path is used.
 
@@ -69,7 +72,7 @@ class CodexOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementati
             domain=DOMAIN,
             client_id=CLIENT_ID,
             client_secret="",
-            authorize_url="",   # unused — device-code flow
+            authorize_url="",  # unused — device-code flow
             token_url=TOKEN_URL,
         )
 

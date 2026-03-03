@@ -3,6 +3,7 @@ Request model for the Codex Responses API.
 
 Mirrors ``ResponsesApiRequest`` from codex-api/src/endpoint/responses.rs.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field

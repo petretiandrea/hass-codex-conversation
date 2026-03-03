@@ -6,6 +6,7 @@ tokens or session management directly.
 
 Mirrors ``ResponsesClient`` from codex-api/src/endpoint/responses.rs.
 """
+
 from __future__ import annotations
 
 from typing import AsyncIterator
@@ -63,7 +64,9 @@ class CodexClient:
         )
         try:
             if resp.status == 401:
-                raise CodexApiError(401, "Unauthorized — bearer token expired or invalid")
+                raise CodexApiError(
+                    401, "Unauthorized — bearer token expired or invalid"
+                )
             if resp.status == 429:
                 retry_after: float | None = None
                 ra = resp.headers.get("Retry-After")

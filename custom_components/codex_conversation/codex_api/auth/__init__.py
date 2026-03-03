@@ -6,6 +6,7 @@ codex_api.auth — OAuth2 and authentication helpers.
     device_flow.py — CodexDeviceFlow + DeviceCodeInfo
     base.py        — AbstractAuth ABC + CodexAuth static implementation
 """
+
 from __future__ import annotations
 
 from .base import AbstractAuth, CodexAuth

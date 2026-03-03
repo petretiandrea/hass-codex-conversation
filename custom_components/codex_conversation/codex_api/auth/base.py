@@ -1,4 +1,5 @@
 """AbstractAuth and the simple static-token implementation."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -50,7 +51,7 @@ class AbstractAuth(ABC):
         extra_headers = dict(kwargs.pop("headers", {}))  # type: ignore[arg-type]
 
         access_token = await self.async_get_access_token()
-        account_id   = await self.async_get_account_id()
+        account_id = await self.async_get_account_id()
 
         headers = {
             **_CODEX_FIXED_HEADERS,
@@ -61,7 +62,10 @@ class AbstractAuth(ABC):
             headers["openai-organization"] = account_id
 
         return await self._session.request(
-            method, self._endpoint, headers=headers, **kwargs  # type: ignore[arg-type]
+            method,
+            self._endpoint,
+            headers=headers,
+            **kwargs,  # type: ignore[arg-type]
         )
 
 
@@ -86,7 +90,7 @@ class CodexAuth(AbstractAuth):
     ) -> None:
         super().__init__(session, endpoint)
         self._access_token = access_token
-        self._account_id   = account_id
+        self._account_id = account_id
 
     async def async_get_access_token(self) -> str:
         return self._access_token

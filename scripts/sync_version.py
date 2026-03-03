@@ -5,6 +5,7 @@ Called by python-semantic-release as build_command after bumping
 pyproject.toml. Since psr does `git add -u` before the version commit,
 the manifest change is included in the same release commit.
 """
+
 import json
 from pathlib import Path
 import tomllib

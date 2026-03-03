@@ -1,4 +1,5 @@
 """Config flow — Codex Device Code Auth."""
+
 from __future__ import annotations
 
 import asyncio
@@ -124,7 +125,6 @@ class CodexConversationConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class CodexOptionsFlow(OptionsFlow):
-
     def __init__(self) -> None:
         self._init_data: dict = {}
 
@@ -137,11 +137,15 @@ class CodexOptionsFlow(OptionsFlow):
 
         if user_input is not None:
             if user_input[CONF_RECOMMENDED]:
-                return self.async_create_entry(data={
-                    **RECOMMENDED_CONVERSATION_OPTIONS,
-                    CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API) or [],
-                    CONF_PROMPT: user_input.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
-                })
+                return self.async_create_entry(
+                    data={
+                        **RECOMMENDED_CONVERSATION_OPTIONS,
+                        CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API) or [],
+                        CONF_PROMPT: user_input.get(
+                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                        ),
+                    }
+                )
             self._init_data = user_input
             return await self.async_step_advanced()
 
@@ -152,23 +156,25 @@ class CodexOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({
-                vol.Optional(
-                    CONF_PROMPT,
-                    description={
-                        "suggested_value": options.get(
-                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                        )
-                    },
-                ): TemplateSelector(),
-                vol.Optional(CONF_LLM_HASS_API): SelectSelector(
-                    SelectSelectorConfig(options=hass_apis, multiple=True)
-                ),
-                vol.Required(
-                    CONF_RECOMMENDED,
-                    default=options.get(CONF_RECOMMENDED, True),
-                ): bool,
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_PROMPT,
+                        description={
+                            "suggested_value": options.get(
+                                CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
+                            )
+                        },
+                    ): TemplateSelector(),
+                    vol.Optional(CONF_LLM_HASS_API): SelectSelector(
+                        SelectSelectorConfig(options=hass_apis, multiple=True)
+                    ),
+                    vol.Required(
+                        CONF_RECOMMENDED,
+                        default=options.get(CONF_RECOMMENDED, True),
+                    ): bool,
+                }
+            ),
         )
 
     # ── Step 2: model + reasoning (only when recommended=False) ────────────────
@@ -183,28 +189,38 @@ class CodexOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="advanced",
-            data_schema=vol.Schema({
-                vol.Required(
-                    CONF_MODEL,
-                    default=options.get(CONF_MODEL, DEFAULT_MODEL),
-                ): SelectSelector(SelectSelectorConfig(options=list(MODELS))),
-                vol.Required(
-                    CONF_REASONING_EFFORT,
-                    default=options.get(CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT),
-                ): SelectSelector(
-                    SelectSelectorConfig(options=["low", "medium", "high"])
-                ),
-                vol.Required(
-                    CONF_REASONING_SUMMARY,
-                    default=options.get(CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY),
-                ): SelectSelector(
-                    SelectSelectorConfig(options=["auto", "short", "detailed", "off"])
-                ),
-                vol.Required(
-                    CONF_TEXT_VERBOSITY,
-                    default=options.get(CONF_TEXT_VERBOSITY, RECOMMENDED_TEXT_VERBOSITY),
-                ): SelectSelector(
-                    SelectSelectorConfig(options=["low", "medium", "high"])
-                ),
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_MODEL,
+                        default=options.get(CONF_MODEL, DEFAULT_MODEL),
+                    ): SelectSelector(SelectSelectorConfig(options=list(MODELS))),
+                    vol.Required(
+                        CONF_REASONING_EFFORT,
+                        default=options.get(
+                            CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(options=["low", "medium", "high"])
+                    ),
+                    vol.Required(
+                        CONF_REASONING_SUMMARY,
+                        default=options.get(
+                            CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=["auto", "short", "detailed", "off"]
+                        )
+                    ),
+                    vol.Required(
+                        CONF_TEXT_VERBOSITY,
+                        default=options.get(
+                            CONF_TEXT_VERBOSITY, RECOMMENDED_TEXT_VERBOSITY
+                        ),
+                    ): SelectSelector(
+                        SelectSelectorConfig(options=["low", "medium", "high"])
+                    ),
+                }
+            ),
         )

@@ -1,4 +1,5 @@
 """Token types, refresh and normalisation helpers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -12,6 +13,7 @@ from .jwt import decode_jwt_exp, extract_account_id
 @dataclass
 class OAuthToken:
     """Typed representation of a Codex OAuth token."""
+
     access_token: str
     refresh_token: str
     account_id: str
@@ -21,19 +23,23 @@ class OAuthToken:
     def as_dict(self) -> dict:
         """Serialise to the dict format expected by HA's OAuth2Session."""
         return {
-            "access_token":  self.access_token,
+            "access_token": self.access_token,
             "refresh_token": self.refresh_token,
-            "account_id":    self.account_id,
-            "expires_at":    self.expires_at,
-            "expires_in":    self.expires_in,
+            "account_id": self.account_id,
+            "expires_at": self.expires_at,
+            "expires_in": self.expires_in,
         }
 
     @classmethod
-    def from_dict(cls, data: dict, previous: "OAuthToken | None" = None) -> "OAuthToken":
+    def from_dict(
+        cls, data: dict, previous: "OAuthToken | None" = None
+    ) -> "OAuthToken":
         """Build an ``OAuthToken`` from a raw server response dict."""
-        access_token  = data.get("access_token", "")
-        refresh_token = data.get("refresh_token") or (previous.refresh_token if previous else "")
-        account_id    = (
+        access_token = data.get("access_token", "")
+        refresh_token = data.get("refresh_token") or (
+            previous.refresh_token if previous else ""
+        )
+        account_id = (
             data.get("account_id")
             or extract_account_id(access_token)
             or (previous.account_id if previous else "")
@@ -64,8 +70,8 @@ async def refresh_token(
     resp = await session.post(
         token_url,
         data={
-            "grant_type":    "refresh_token",
-            "client_id":     client_id,
+            "grant_type": "refresh_token",
+            "client_id": client_id,
             "refresh_token": token.refresh_token,
         },
     )

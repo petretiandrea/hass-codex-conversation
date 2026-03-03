@@ -13,6 +13,7 @@ All public symbols are re-exported here so that callers can simply write::
 
     from .codex_api import CodexClient, CodexRequest, OutputTextDelta, ...
 """
+
 from __future__ import annotations
 
 from .auth import (

@@ -3,6 +3,7 @@ Codex API error hierarchy.
 
 Mirrors the ``ApiError`` enum from codex-api/src/error.rs.
 """
+
 from __future__ import annotations
 
 

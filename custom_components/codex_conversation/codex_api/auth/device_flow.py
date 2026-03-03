@@ -1,4 +1,5 @@
 """Device-code OAuth flow for the Codex CLI authentication endpoint."""
+
 from __future__ import annotations
 
 import asyncio
@@ -11,19 +12,20 @@ from .token import OAuthToken
 # ── Codex OAuth endpoints & credentials ───────────────────────────────────────
 
 CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann"
-_ISSUER   = "https://auth.openai.com"
+_ISSUER = "https://auth.openai.com"
 _AUTH_BASE = f"{_ISSUER}/api/accounts"
 
-USERCODE_URL     = f"{_AUTH_BASE}/deviceauth/usercode"
-POLL_URL         = f"{_AUTH_BASE}/deviceauth/token"
-TOKEN_URL        = f"{_ISSUER}/oauth/token"
-REDIRECT_URI     = f"{_ISSUER}/deviceauth/callback"
-VERIFICATION_URL = f"{_ISSUER}/codex/device"   # URL shown to the user
+USERCODE_URL = f"{_AUTH_BASE}/deviceauth/usercode"
+POLL_URL = f"{_AUTH_BASE}/deviceauth/token"
+TOKEN_URL = f"{_ISSUER}/oauth/token"
+REDIRECT_URI = f"{_ISSUER}/deviceauth/callback"
+VERIFICATION_URL = f"{_ISSUER}/codex/device"  # URL shown to the user
 
 
 @dataclass
 class DeviceCodeInfo:
     """User-facing information returned when starting a device-code flow."""
+
     user_code: str
     interval: int  # recommended polling interval in seconds
 
@@ -123,11 +125,11 @@ class CodexDeviceFlow:
         token_resp = await self._session.post(
             self._token_url,
             data={
-                "grant_type":    "authorization_code",
-                "client_id":     self._client_id,
-                "code":          data["authorization_code"],
+                "grant_type": "authorization_code",
+                "client_id": self._client_id,
+                "code": data["authorization_code"],
                 "code_verifier": data["code_verifier"],
-                "redirect_uri":  self._redirect_uri,
+                "redirect_uri": self._redirect_uri,
             },
         )
         token_resp.raise_for_status()

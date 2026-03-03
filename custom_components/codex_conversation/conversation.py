@@ -1,4 +1,5 @@
 """Conversation platform — OpenAI Codex agent."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
@@ -62,6 +63,7 @@ MAX_TOOL_ITERATIONS = 10
 
 # ── Platform setup ─────────────────────────────────────────────────────────────
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -72,6 +74,7 @@ async def async_setup_entry(
 
 
 # ── Entity ─────────────────────────────────────────────────────────────────────
+
 
 class CodexConversationEntity(ConversationEntity):
     """Conversation agent backed by OpenAI Codex (ChatGPT subscription)."""
@@ -86,8 +89,8 @@ class CodexConversationEntity(ConversationEntity):
         entry: ConfigEntry,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
-        self.hass          = hass
-        self._entry        = entry
+        self.hass = hass
+        self._entry = entry
         self._oauth_session = oauth_session
         self._attr_unique_id = entry.entry_id
         if self._entry.options.get(CONF_LLM_HASS_API):
@@ -195,11 +198,13 @@ class CodexConversationEntity(ConversationEntity):
 
 # ── Request building ───────────────────────────────────────────────────────────
 
+
 def _json_default(obj: object) -> str:
     """Fallback serialiser for types json.dumps can't handle natively."""
     if isinstance(obj, (date, datetime)):
         return obj.isoformat()
     return str(obj)
+
 
 def _format_tool(tool: llm.Tool) -> dict:
     """Format an HA LLM tool as an OpenAI Responses API function definition."""
@@ -228,37 +233,46 @@ def _build_input_items(chat_log: ChatLog) -> list[dict]:
         if isinstance(content, SystemContent):
             pass  # handled separately as instructions
         elif isinstance(content, UserContent):
-            items.append({
-                "type": "message",
-                "role": "user",
-                "content": [{"type": "input_text", "text": content.content}],
-            })
+            items.append(
+                {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": content.content}],
+                }
+            )
         elif isinstance(content, AssistantContent):
             if content.tool_calls:
                 for tc in content.tool_calls:
-                    items.append({
-                        "type": "function_call",
-                        "name": tc.tool_name,
-                        "arguments": json.dumps(tc.tool_args),
-                        "call_id": tc.id,
-                    })
+                    items.append(
+                        {
+                            "type": "function_call",
+                            "name": tc.tool_name,
+                            "arguments": json.dumps(tc.tool_args),
+                            "call_id": tc.id,
+                        }
+                    )
             elif content.content:
-                items.append({
-                    "type": "message",
-                    "role": "assistant",
-                    "content": [{"type": "output_text", "text": content.content}],
-                })
+                items.append(
+                    {
+                        "type": "message",
+                        "role": "assistant",
+                        "content": [{"type": "output_text", "text": content.content}],
+                    }
+                )
         elif isinstance(content, ToolResultContent):
-            items.append({
-                "type": "function_call_output",
-                "call_id": content.tool_call_id,
-                "output": json.dumps(content.tool_result, default=_json_default),
-            })
+            items.append(
+                {
+                    "type": "function_call_output",
+                    "call_id": content.tool_call_id,
+                    "output": json.dumps(content.tool_result, default=_json_default),
+                }
+            )
 
     return items
 
 
 # ── Streaming helpers ──────────────────────────────────────────────────────────
+
 
 async def _events_to_deltas(
     client: CodexClient,

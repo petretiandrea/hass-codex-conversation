@@ -5,6 +5,7 @@ Mirrors the responsibilities of:
   codex-client/src/sse_stream.rs   → raw byte-stream → SSE frames
   codex-api/src/sse/responses.rs   → SSE frames → typed ResponseEvent objects
 """
+
 from __future__ import annotations
 
 import json
@@ -42,6 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # ── Error classification ───────────────────────────────────────────────────────
 
+
 def _classify_error(code: str, message: str) -> CodexError:
     """Map an API error code string to the correct exception subclass."""
     lc = code.lower()
@@ -59,6 +61,7 @@ def _classify_error(code: str, message: str) -> CodexError:
 
 
 # ── Event parsing ──────────────────────────────────────────────────────────────
+
 
 def parse_event(data_str: str) -> ResponseEvent | None:
     """
@@ -137,13 +140,14 @@ def parse_event(data_str: str) -> ResponseEvent | None:
     if etype in ("response.reasoning.delta", "response.reasoning_content.delta"):
         raw_delta = evt.get("delta") or {}
         text = (
-            raw_delta.get("text", "")
-            if isinstance(raw_delta, dict)
-            else str(raw_delta)
+            raw_delta.get("text", "") if isinstance(raw_delta, dict) else str(raw_delta)
         )
         return ReasoningContentDelta(delta=text)
 
-    if etype in ("response.reasoning_summary.delta", "response.reasoning_summary_text.delta"):
+    if etype in (
+        "response.reasoning_summary.delta",
+        "response.reasoning_summary_text.delta",
+    ):
         return ReasoningSummaryDelta(
             delta=evt.get("delta", ""),
             summary_index=evt.get("summary_index", 0),
@@ -181,6 +185,7 @@ def parse_event(data_str: str) -> ResponseEvent | None:
 
 
 # ── Async SSE iterator ─────────────────────────────────────────────────────────
+
 
 async def sse_iter(resp: aiohttp.ClientResponse) -> AsyncIterator[ResponseEvent]:
     """
