@@ -24,6 +24,7 @@ from homeassistant.components.conversation import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow, llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -147,51 +148,22 @@ class CodexConversationEntity(ConversationEntity):
             oauth_session=self._oauth_session,
         )
         client = CodexClient(auth)
-
-        # ── Tool loop ──────────────────────────────────────────────────────────
-        tools = (
-            [_format_tool(t) for t in chat_log.llm_api.tools]
-            if chat_log.llm_api
-            else []
+        await async_run_chat_log(
+            chat_log=chat_log,
+            client=client,
+            model=model,
+            entity_id=self.entity_id,
+            reasoning_effort=self._entry.options.get(
+                CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+            ),
+            reasoning_summary=self._entry.options.get(
+                CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+            ),
+            text_verbosity=self._entry.options.get(
+                CONF_TEXT_VERBOSITY, RECOMMENDED_TEXT_VERBOSITY
+            ),
+            error_cls=ConverseError,
         )
-        instructions = _extract_instructions(chat_log)
-
-        for _iteration in range(MAX_TOOL_ITERATIONS):
-            input_items = _build_input_items(chat_log)
-            request = CodexRequest(
-                model=model,
-                input=input_items,
-                instructions=instructions,
-                tools=tools,
-                reasoning_effort=self._entry.options.get(
-                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                ),
-                reasoning_summary=self._entry.options.get(
-                    CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
-                ),
-                text_verbosity=self._entry.options.get(
-                    CONF_TEXT_VERBOSITY, RECOMMENDED_TEXT_VERBOSITY
-                ),
-            )
-
-            try:
-                async for _ in chat_log.async_add_delta_content_stream(
-                    self.entity_id,
-                    _events_to_deltas(client, request),
-                ):
-                    pass
-            except (
-                CodexApiError,
-                CodexContextWindowExceeded,
-                CodexQuotaExceeded,
-                CodexRateLimited,
-                CodexServerOverloaded,
-            ) as err:
-                _LOGGER.error("Codex error: %s", err)
-                raise ConverseError(str(err)) from err
-
-            if not chat_log.unresponded_tool_results:
-                break
 
         return conversation.async_get_result_from_chat_log(user_input, chat_log)
 
@@ -269,6 +241,59 @@ def _build_input_items(chat_log: ChatLog) -> list[dict]:
             )
 
     return items
+
+
+async def async_run_chat_log(
+    *,
+    chat_log: ChatLog,
+    client: CodexClient,
+    model: str,
+    entity_id: str,
+    reasoning_effort: str,
+    reasoning_summary: str,
+    text_verbosity: str,
+    max_iterations: int = MAX_TOOL_ITERATIONS,
+    instructions_suffix: str = "",
+    error_cls: type[Exception] = HomeAssistantError,
+) -> None:
+    """Execute a ChatLog against the Codex Responses API."""
+    tools = [_format_tool(t) for t in chat_log.llm_api.tools] if chat_log.llm_api else []
+    instructions = _extract_instructions(chat_log)
+    if instructions_suffix:
+        instructions = (
+            f"{instructions}\n\n{instructions_suffix}" if instructions else instructions_suffix
+        )
+
+    for _iteration in range(max_iterations):
+        input_items = _build_input_items(chat_log)
+        request = CodexRequest(
+            model=model,
+            input=input_items,
+            instructions=instructions,
+            tools=tools,
+            reasoning_effort=reasoning_effort,
+            reasoning_summary=reasoning_summary,
+            text_verbosity=text_verbosity,
+        )
+
+        try:
+            async for _ in chat_log.async_add_delta_content_stream(
+                entity_id,
+                _events_to_deltas(client, request),
+            ):
+                pass
+        except (
+            CodexApiError,
+            CodexContextWindowExceeded,
+            CodexQuotaExceeded,
+            CodexRateLimited,
+            CodexServerOverloaded,
+        ) as err:
+            _LOGGER.error("Codex error: %s", err)
+            raise error_cls(str(err)) from err
+
+        if not chat_log.unresponded_tool_results:
+            break
 
 
 # ── Streaming helpers ──────────────────────────────────────────────────────────

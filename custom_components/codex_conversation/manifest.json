@@ -3,7 +3,7 @@
   "name": "OpenAI Codex Conversation",
   "version": "0.1.0",
   "documentation": "https://github.com/",
-  "dependencies": ["auth", "conversation"],
+  "dependencies": ["ai_task", "auth", "conversation"],
   "codeowners": [],
   "requirements": [],
   "iot_class": "cloud_polling",

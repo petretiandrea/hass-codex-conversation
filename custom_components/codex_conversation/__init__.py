@@ -12,7 +12,7 @@ from .oauth import CodexOAuth2Implementation
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.CONVERSATION]
+PLATFORMS = [Platform.AI_TASK, Platform.CONVERSATION]
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
