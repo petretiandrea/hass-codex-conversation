@@ -1,139 +1,157 @@
 # hass-codex-conversation
 
-A [Home Assistant](https://www.home-assistant.io/) custom integration that brings **OpenAI Codex** models into your smart home as a conversation agent — without an API key or separate billing.
+A [Home Assistant](https://www.home-assistant.io/) custom integration that brings **OpenAI Codex** models into your smart home as a conversation agent, without an API key or separate billing.
 
----
+## The Idea
 
-## The idea
+OpenAI's **Codex CLI** is a developer tool that lets you use powerful reasoning models such as `gpt-5.1-codex` and `gpt-5.3-codex` directly from the terminal.
+Access to these models is included in a ChatGPT Plus or Pro subscription, so there is no separate OpenAI API key and no per-token billing on top of that subscription.
 
-OpenAI's **Codex CLI** is a developer tool that lets you use powerful reasoning models (`gpt-5.1-codex`, `gpt-5.2-codex`, …) directly from the terminal.
-Access to these models is **included in any ChatGPT Plus or Pro subscription** — no OpenAI API key needed, no per-token billing on top of what you already pay.
-
-This integration reverse-engineers the same authenticated endpoint the Codex CLI uses and exposes it as a native Home Assistant conversation agent.
-If you already pay for ChatGPT Plus or Pro, you get a state-of-the-art reasoning model in Home Assistant for free.
-
----
+This integration reuses the same authenticated Codex backend flow and exposes it as a native Home Assistant conversation agent.
 
 ## Features
 
-- **No API key** — authenticates with your existing ChatGPT account via OAuth2 device-code flow
-- **Streaming responses** — text appears word by word, same as the ChatGPT web interface
-- **Reasoning models** — supports the full `gpt-5.*-codex` family, including models with extended chain-of-thought reasoning
-- **Multi-turn conversations** — full conversation history is sent on every turn
-- **HA Assist integration** — works as a drop-in conversation agent in the Home Assistant Assist pipeline
-- **Automatic token refresh** — OAuth2 tokens are refreshed transparently in the background
-
----
+- No API key required, authentication happens with your existing ChatGPT account through OAuth2 device flow.
+- Streaming responses, so text appears progressively in the Home Assistant conversation UI.
+- Support for the `gpt-5.*-codex` model family.
+- Multi-turn conversations with full chat history.
+- Home Assistant Assist integration.
+- Automatic token refresh.
+- Initial `ai_task` support for `generate_data`.
 
 ## Requirements
 
 | Requirement | Details |
-|---|---|
-| Home Assistant | 2024.11 or newer |
+| --- | --- |
+| Home Assistant | 2026.2.0 or newer |
 | Subscription | ChatGPT Plus or Pro |
-
----
 
 ## Installation
 
-### HACS (recommended)
+### HACS
 
-1. Open HACS → **Integrations** → menu → **Custom repositories**
-2. Add `https://github.com/your-username/hass-codex-conversation` as an **Integration**
-3. Search for *OpenAI Codex Conversation* and install it
-4. Restart Home Assistant
+1. Open HACS and go to **Integrations**.
+2. Open the menu and choose **Custom repositories**.
+3. Add your repository URL as an **Integration** repository.
+4. Search for **OpenAI Codex Conversation** and install it.
+5. Restart Home Assistant.
 
 ### Manual
 
-1. Copy the `custom_components/codex_conversation` folder into your HA `config/custom_components/` directory
-2. Restart Home Assistant
-
----
+1. Copy `custom_components/codex_conversation` into your Home Assistant `config/custom_components/` directory.
+2. Restart Home Assistant.
 
 ## Setup
 
-1. Go to **Settings → Devices & Services → Add Integration**
-2. Search for *OpenAI Codex Conversation*
-3. A device code and a URL will appear in the HA log (and shortly in the UI):
-   ```
+1. Go to **Settings -> Devices & Services -> Add Integration**.
+2. Search for **OpenAI Codex Conversation**.
+3. A device code and URL will be shown during setup, for example:
+
+   ```text
    Go to https://auth.openai.com/codex/device and enter code: XXXX-XXXX
    ```
-4. Open that URL in your browser, log in with your ChatGPT account, and enter the code
-5. Once approved, select your preferred Codex model and finish the setup
 
----
+4. Open the URL in your browser, log in with your ChatGPT account, and enter the code.
+5. Approve the login and complete the integration setup.
 
 ## Configuration
 
-The following option can be changed after setup via **Settings → Devices & Services → OpenAI Codex Conversation → Configure**:
+After setup, you can change options from **Settings -> Devices & Services -> OpenAI Codex Conversation -> Configure**.
 
 | Option | Description | Default |
-|---|---|---|
-| Model | The Codex model to use | `gpt-5.1-codex` |
+| --- | --- | --- |
+| Model | Codex model used for the conversation agent | `gpt-5.1-codex` |
 
-### Available models
+### Available Models
 
 | Model | Notes |
-|---|---|
+| --- | --- |
 | `gpt-5.1-codex` | Balanced speed and reasoning |
 | `gpt-5.2-codex` | More capable reasoning |
 | `gpt-5.3-codex` | Most capable |
 | `gpt-5.1-codex-mini` | Faster and lighter |
 
----
+## How It Works
 
-## How it works
-
-```
+```text
 Home Assistant Assist
-        │
-        ▼
+        |
+        v
 CodexConversationEntity
-        │  builds CodexRequest from ChatLog history
-        ▼
-CodexClient  ──(AbstractAuth)──▶  CodexHAAuth
-        │                               │
-        │                    asks OAuth2Session for a
-        │                    valid token (refresh if needed)
-        ▼
+        |  builds CodexRequest from ChatLog history
+        v
+CodexClient  --(AbstractAuth)-->  CodexHAAuth
+        |                               |
+        |                    asks OAuth2Session for a
+        |                    valid token (refresh if needed)
+        v
 chatgpt.com/backend-api/codex/responses
-        │
-        │  Server-Sent Events stream
-        ▼
-SSE parser  ──▶  OutputTextDelta events
-        │
-        ▼
-ChatLog delta stream  ──▶  HA Assist UI
+        |
+        |  Server-Sent Events stream
+        v
+SSE parser  -->  OutputTextDelta events
+        |
+        v
+ChatLog delta stream  -->  HA Assist UI
 ```
 
-The integration is built as a clean layered Python library inside `custom_components/codex_conversation/codex_api/`:
+The integration code is layered under `custom_components/codex_conversation/codex_api/`:
 
 | Module | Responsibility |
-|---|---|
-| `auth.py` | `AbstractAuth` ABC, JWT helpers, raw OAuth2 HTTP calls |
-| `client.py` | `CodexClient` — streams requests, depends only on `AbstractAuth` |
+| --- | --- |
+| `auth` | `AbstractAuth`, JWT helpers, raw OAuth2 HTTP calls |
+| `client.py` | `CodexClient`, streams requests using authenticated transport |
 | `models.py` | Typed SSE event dataclasses |
 | `requests.py` | `CodexRequest` builder |
 | `sse.py` | SSE frame parsing |
 | `errors.py` | Exception hierarchy |
 
-HA-specific code lives outside the library:
+Home Assistant-specific glue lives outside that client package:
 
 | File | Responsibility |
-|---|---|
-| `oauth.py` | `CodexHAAuth` + `CodexOAuth2Implementation` |
-| `conversation.py` | `ConversationEntity` — bridges ChatLog ↔ CodexClient |
-| `config_flow.py` | Device-code OAuth UI flow |
+| --- | --- |
+| `oauth.py` | `CodexHAAuth` and OAuth2 implementation |
+| `conversation.py` | `ConversationEntity` bridge between `ChatLog` and Codex |
+| `ai_task.py` | AI Task entity support |
+| `config_flow.py` | Device-code OAuth flow |
 
----
+## Development
+
+The repository setup has been aligned with a more modern HACS integration blueprint style.
+
+### Local Bootstrap
+
+```bash
+bash script/setup/bootstrap
+```
+
+### Run Home Assistant
+
+```bash
+bash script/develop
+```
+
+This starts Home Assistant using `config/configuration.yaml`.
+
+### Useful Scripts
+
+- `script/lint` formats and lints the repository with Ruff.
+- `script/lint-check` runs lint checks without modifying files.
+- `script/test` runs the test suite.
+- `script/check` runs a quick validation pass.
+
+### Repository Tooling
+
+- GitHub Actions workflows for `Tests`, `Lint`, and `Validate`.
+- `Validate` includes both `hassfest` and HACS validation.
+- Pre-commit now uses Ruff, codespell, JSON/YAML checks, and Prettier for repository files.
+- Dependabot is configured for GitHub Actions and Python dependencies.
 
 ## Disclaimer
 
-This integration uses an **unofficial, internal API** (`chatgpt.com/backend-api/codex/responses`) that is not publicly documented by OpenAI.
-It may break if OpenAI changes the API without notice.
-Use at your own risk. This project is not affiliated with or endorsed by OpenAI.
-
----
+This integration uses an unofficial internal endpoint, `chatgpt.com/backend-api/codex/responses`, which is not publicly documented by OpenAI.
+It may break if OpenAI changes that backend without notice.
+This project is not affiliated with or endorsed by OpenAI.
 
 ## License
 

@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+cat <<'EOF'
+Available scripts:
+  script/setup/bootstrap  Install dependencies and pre-commit hooks
+  script/setup/setup      Alias for bootstrap
+  script/develop          Run Home Assistant with config/
+  script/lint             Format and lint the repository
+  script/lint-check       Check formatting and linting
+  script/test             Run pytest
+  script/check            Run a quick validation pass
+  script/clean            Remove common local caches
+EOF

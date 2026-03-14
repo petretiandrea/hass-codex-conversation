@@ -1,21 +1,32 @@
-// See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "name": "codex conversation development",
-  "appPort": ["9123:8123"],
-  "containerUser": "root",
-  "postCreateCommand": "uv sync --group test && uv run pre-commit install",
-  "containerEnv": { "DEVCONTAINER": "1" },
-  "capAdd": ["CAP_NET_RAW", "CAP_NET_BROADCAST", "CAP_NET_BIND_SERVICE"],
-  "runArgs": ["--network=bridge"],
+  "name": "Codex Conversation Dev Container",
+  "postCreateCommand": "bash script/setup/setup",
+  "containerEnv": {
+    "DEVCONTAINER": "1",
+    "PYTHONASYNCIODEBUG": "1",
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "forwardPorts": [8123],
+  "portsAttributes": {
+    "8123": {
+      "label": "Home Assistant",
+      "onAutoForward": "notify"
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [
+        "EditorConfig.EditorConfig",
         "ms-python.python",
         "ms-python.vscode-pylance",
         "charliermarsh.ruff",
+        "esbenp.prettier-vscode",
+        "davidanson.vscode-markdownlint",
+        "redhat.vscode-yaml",
         "github.vscode-pull-request-github",
         "ryanluker.vscode-coverage-gutters"
       ],
@@ -29,6 +40,15 @@
         "editor.formatOnSave": true,
         "editor.formatOnType": false,
         "files.trimTrailingWhitespace": true,
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[jsonc]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[yaml]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
         },
@@ -38,5 +58,9 @@
         "python.testing.pytestPath": "${workspaceFolder}/.venv/bin/pytest"
       }
     }
-  }
+  },
+  "mounts": [
+    "source=${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig.host,type=bind,consistency=cached,readonly"
+  ],
+  "remoteUser": "vscode"
 }

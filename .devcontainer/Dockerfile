@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/python:1-3.13-bookworm
+FROM mcr.microsoft.com/devcontainers/python:dev-3.14-bookworm
 
 # Install uv (official binary via install script)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh \

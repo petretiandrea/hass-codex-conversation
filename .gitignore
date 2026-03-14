@@ -4,11 +4,15 @@ pythonenv*
 .coverage
 venv
 .venv
+.local/
 
 coverage_re/
 pytest-coverage.txt
 pytest.xml
+htmlcov/
 
 .idea/
 
 .claude/
+config/*
+!config/configuration.yaml

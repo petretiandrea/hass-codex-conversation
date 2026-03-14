@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+source "$ROOT_DIR/script/.lib/output.sh"
+
+cd "$ROOT_DIR"
+
+log_header "Bootstrapping development environment"
+uv sync --group dev
+uv run python -m pre_commit install
+log_success "Bootstrap complete"

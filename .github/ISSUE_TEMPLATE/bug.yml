@@ -1,0 +1,40 @@
+name: Bug report
+description: Report a bug with the custom integration
+labels: [bug]
+body:
+  - type: input
+    attributes:
+      label: Home Assistant version
+      placeholder: 2026.3.0
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Integration version
+      placeholder: 0.1.0
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: I enabled debug logging.
+          required: true
+        - label: I searched existing issues first.
+          required: true
+  - type: textarea
+    attributes:
+      label: Describe the issue
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduction steps
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Relevant logs
+      render: text

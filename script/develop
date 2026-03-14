@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+source "$ROOT_DIR/script/.lib/output.sh"
+
+cd "$ROOT_DIR"
+
+export PYTHONPATH="${ROOT_DIR}:${PYTHONPATH:-}"
+
+log_header "Starting Home Assistant"
+uv run hass --script ensure_config -c "$ROOT_DIR/config"
+uv run hass -c "$ROOT_DIR/config"

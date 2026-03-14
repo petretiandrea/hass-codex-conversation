@@ -1,6 +1,6 @@
 {
-  "name": "Codex Converation",
+  "name": "Codex Conversation",
   "hacs": "0.0.1",
   "render_readme": true,
-  "homeassistant": "2026.2.0"
+  "homeassistant": "2026.3.0"
 }

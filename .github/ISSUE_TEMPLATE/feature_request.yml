@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest an idea for the custom integration
+labels: [enhancement]
+body:
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing feature requests first.
+          required: true
+  - type: textarea
+    attributes:
+      label: Problem
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Additional context

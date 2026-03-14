@@ -1,32 +1,28 @@
-repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.3.0
-    hooks:
-      - id: check-added-large-files
-      - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-  - repo: local
-    hooks:
-      - id: black
-        name: black
-        entry: black
-        language: system
-        types: [python]
-        require_serial: true
-      - id: flake8
-        name: flake8
-        entry: flake8
-        language: system
-        types: [python]
-        require_serial: true
-      - id: reorder-python-imports
-        name: Reorder python imports
-        entry: reorder-python-imports
-        language: system
-        types: [python]
-        args: [--application-directories=custom_components]
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.2.1
-    hooks:
-      - id: prettier
+# repos:
+#   - repo: https://github.com/pre-commit/pre-commit-hooks
+#     rev: v5.0.0
+#     hooks:
+#       - id: check-added-large-files
+#       - id: check-json
+#       - id: check-yaml
+#       - id: end-of-file-fixer
+#       - id: trailing-whitespace
+
+#   - repo: https://github.com/astral-sh/ruff-pre-commit
+#     rev: v0.11.13
+#     hooks:
+#       - id: ruff
+#         args: [--fix]
+#       - id: ruff-format
+
+#   - repo: https://github.com/codespell-project/codespell
+#     rev: v2.4.1
+#     hooks:
+#       - id: codespell
+#         args: [--ignore-words-list=converation,hass]
+
+#   - repo: https://github.com/pre-commit/mirrors-prettier
+#     rev: v4.0.0-alpha.8
+#     hooks:
+#       - id: prettier
+#         files: \.(json|md|ya?ml)$
