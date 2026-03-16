@@ -19,8 +19,8 @@ test = [
     "pytest-cov",
     "pytest-mock",
     "pytest-homeassistant-custom-component",
-    "pytest-asyncio>=0.23.4",
-    "async-timeout>=4.0.2",
+    "pytest-asyncio",
+    "async-timeout",
 ]
 
 # ── Ruff (replaces flake8 + isort) ────────────────────────────────────────────
