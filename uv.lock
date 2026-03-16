@@ -20,19 +20,18 @@ wheels = [
 
 [[package]]
 name = "aiodiscover"
-version = "1.6.0"
+version = "2.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "async-timeout" },
+    { name = "aiodns" },
     { name = "cached-ipaddress" },
-    { name = "dnspython" },
     { name = "ifaddr" },
     { name = "netifaces" },
     { name = "pyroute2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fd/57/ecba2548156b4401a707b8aa694079a5f9bbfa5df60dd77821443effbb26/aiodiscover-1.6.0.tar.gz", hash = "sha256:4a41dc1cfed99d4672af5db64c058b00a3eb49b2aa8adae3edd9e5f5253308e7", size = 15918, upload-time = "2023-12-17T00:04:36.704Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/29/f7/aba9aca61f5d882a80f912fbeb61beae6fac70358f5fa8d1a0eb71add624/aiodiscover-2.7.1.tar.gz", hash = "sha256:ad6f673d1d9253a6a59e1c2a1086f80604bc8fce584cbdcc4a510da2b81aa30b", size = 13614, upload-time = "2025-08-04T00:14:07.929Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d6/75/a9b086884bb60cf232a604b55cdf4144c9c994676be81c7f6f95e32e1644/aiodiscover-1.6.0-py2.py3-none-any.whl", hash = "sha256:173fc562926b6d7da343f40e0e4a8f27ef81cfb6406a66eb0c92549bd1621996", size = 10378, upload-time = "2023-12-17T00:04:34.827Z" },
+    { url = "https://files.pythonhosted.org/packages/f6/fc/12fa09bb9392d2b069b977b7661906cebeffd8b19c0c237983f50d56ac84/aiodiscover-2.7.1-py3-none-any.whl", hash = "sha256:116c63e21aa8ae8df093baf2d708804c514d6639119a853d7d63039975a5f810", size = 13810, upload-time = "2025-08-04T00:14:06.578Z" },
 ]
 
 [[package]]
@@ -784,15 +783,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/96/8e/709914eb2b5749865801041647dc7f4e6d00b549cfe88b65ca192995f07c/distlib-0.4.0.tar.gz", hash = "sha256:feec40075be03a04501a973d81f633735b4b69f98b05450592310c0f401a4e0d", size = 614605, upload-time = "2025-07-17T16:52:00.465Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/33/6b/e0547afaf41bf2c42e52430072fa5658766e3d65bd4b03a563d1b6336f57/distlib-0.4.0-py2.py3-none-any.whl", hash = "sha256:9659f7d87e46584a30b5780e43ac7a2143098441670ff0a49d5f9034c54a6c16", size = 469047, upload-time = "2025-07-17T16:51:58.613Z" },
-]
-
-[[package]]
-name = "dnspython"
-version = "2.8.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/8c/8b/57666417c0f90f08bcafa776861060426765fdb422eb10212086fb811d26/dnspython-2.8.0.tar.gz", hash = "sha256:181d3c6996452cb1189c4046c61599b84a5a86e099562ffde77d26984ff26d0f", size = 368251, upload-time = "2025-09-07T18:58:00.022Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ba/5a/18ad964b0086c6e62e2e7500f7edc89e3faa45033c71c1893d34eed2b2de/dnspython-2.8.0-py3-none-any.whl", hash = "sha256:01d9bbc4a2d76bf0db7c1f729812ded6d912bd318d3b1cf81d30c0f845dbf3af", size = 331094, upload-time = "2025-09-07T18:57:58.071Z" },
 ]
 
 [[package]]
