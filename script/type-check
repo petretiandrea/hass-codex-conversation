@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# script/lint: Run linting tools and apply formatting
+# script/type-check: Run type checking tools
 #
-# Runs Ruff format and Ruff check with auto-fix enabled. Automatically cleans up
-# any accidental package installations after running.
+# Runs Pyright type checker to validate type annotations and catch type-related
+# issues. Uses 'basic' type checking mode.
 #
 # Usage:
-#   ./script/lint
+#   ./script/type-check
 #
 # Examples:
-#   ./script/lint
+#   ./script/type-check
 
 set -euo pipefail
 
@@ -32,13 +32,8 @@ if [[ -z ${VIRTUAL_ENV:-} ]]; then
     fi
 fi
 
-log_header "Running Ruff format"
-ruff format .
+log_header "Running type checking tools"
 
-log_header "Running Ruff check"
-ruff check . --fix
+pyright
 
-# Clean up any accidental package installation from uv run
-"$SCRIPT_DIR/clean" --minimal
-
-log_success "Linting completed"
+log_success "Type checking completed"

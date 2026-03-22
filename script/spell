@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# script/lint: Run linting tools and apply formatting
+# script/spell: Run spell checking with codespell
 #
-# Runs Ruff format and Ruff check with auto-fix enabled. Automatically cleans up
-# any accidental package installations after running.
+# Runs codespell with write-changes enabled to automatically fix common typos.
+# Only checks Python, Markdown, and RST files in custom_components and documentation.
 #
 # Usage:
-#   ./script/lint
+#   ./script/spell
 #
 # Examples:
-#   ./script/lint
+#   ./script/spell
 
 set -euo pipefail
 
@@ -32,13 +32,20 @@ if [[ -z ${VIRTUAL_ENV:-} ]]; then
     fi
 fi
 
-log_header "Running Ruff format"
-ruff format .
-
-log_header "Running Ruff check"
-ruff check . --fix
+log_header "Running codespell with auto-fix"
+codespell \
+    --write-changes \
+    --ignore-words-list=aiport,astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn \
+    --skip="./.*,*.csv,*.json,*.ambr,uv.lock" \
+    --quiet-level=2 \
+    custom_components/ \
+    README.md \
+    CONTRIBUTING.md \
+    DEPENDENCIES.md \
+    script/ \
+    tests/ 2>&1 || true
 
 # Clean up any accidental package installation from uv run
 "$SCRIPT_DIR/clean" --minimal
 
-log_success "Linting completed"
+log_success "Spell checking completed"
