@@ -119,14 +119,14 @@ if [[ "$VENV_IS_EXTERNAL" == "true" ]]; then
 fi
 
 log_header "Installing development dependencies"
-uv pip install --requirement requirements_dev.txt
+uv sync --group dev
 
 log_header "Installing test dependencies"
-uv pip install --requirement requirements_test.txt
+uv sync --group test
 
 log_header "Installing runtime dependencies"
 if [[ -s requirements.txt ]] && grep -qv '^#' requirements.txt | grep -q '[^[:space:]]'; then
-    uv pip install --requirement requirements.txt
+    uv sync
 else
     log_info "No runtime dependencies defined (this is normal for blueprints)"
 fi
