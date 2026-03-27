@@ -14,5 +14,6 @@ htmlcov/
 .idea/
 
 .claude/
+custom_components/hacs
 config/*
 !config/configuration.yaml
