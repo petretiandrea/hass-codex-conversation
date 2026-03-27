@@ -9,17 +9,18 @@ dependencies = []   # runtime deps are managed by Home Assistant itself
 [dependency-groups]
 dev = [
     { include-group = "test" },
-    "homeassistant==2026.3.0",
+    "homeassistant==2026.3.4",
+    "hassil>=3.5.0",
+    "home-assistant-intents>=2026.3.3",
     "aiodiscover>=1.6.0",
     "pre-commit",
     "ruff>=0.9.0",
-    "autoconf>=2025.10.21.1",
 ]
 test = [
     "pytest",
     "pytest-cov",
     "pytest-mock",
-    "pytest-homeassistant-custom-component",
+    "pytest-homeassistant-custom-component==0.13.320",
     "pytest-asyncio",
     "async-timeout",
 ]
@@ -45,7 +46,7 @@ combine-as-imports = true
 version_toml = ["pyproject.toml:project.version"]
 tag_format = "v{version}"
 commit_message = "chore(release): {version} [skip ci]"
-build_command = "python scripts/sync_version.py"
+build_command = "python script/sync_version.py"
 
 [tool.semantic_release.branches.main]
 match = "main"

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components import ai_task as ai_task_component
@@ -20,9 +21,13 @@ from .conftest import make_chat_log
 
 
 @pytest.fixture
-def mock_ai_task_entity(hass, mock_config_entry, mock_oauth_session) -> CodexAITaskEntity:
+def mock_ai_task_entity(
+    hass, mock_config_entry, mock_oauth_session, mock_ai_task_subentry: SimpleNamespace
+) -> CodexAITaskEntity:
     """A CodexAITaskEntity wired to hass but not added to the entity registry."""
-    entity = CodexAITaskEntity(hass, mock_config_entry, mock_oauth_session)
+    entity = CodexAITaskEntity(
+        hass, mock_config_entry, mock_oauth_session, mock_ai_task_subentry
+    )
     entity.entity_id = f"ai_task.{DOMAIN}"
     entity.hass = hass
     return entity
@@ -30,7 +35,13 @@ def mock_ai_task_entity(hass, mock_config_entry, mock_oauth_session) -> CodexAIT
 
 async def test_generate_data_returns_text_result(mock_ai_task_entity):
     """The entity should return plain text when no structure is requested."""
-    chat_log = make_chat_log([AssistantContent(content="Result text", tool_calls=None)])
+    chat_log = make_chat_log(
+        [
+            AssistantContent(
+                agent_id="ai_task.codex", content="Result text", tool_calls=None
+            )
+        ]
+    )
     chat_log.conversation_id = "conv-1"
     task = MagicMock(spec=ai_task_component.GenDataTask)
     task.structure = None
@@ -39,7 +50,9 @@ async def test_generate_data_returns_text_result(mock_ai_task_entity):
     async def fake_stream(request):
         yield OutputTextDelta(delta="Result text", content_index=0)
 
-    with patch("custom_components.codex_conversation.ai_task.CodexClient") as MockClient:
+    with patch(
+        "custom_components.codex_conversation.ai_task.CodexClient"
+    ) as MockClient:
         MockClient.return_value.stream = fake_stream
         result = await mock_ai_task_entity._async_generate_data(task, chat_log)
 
@@ -50,7 +63,11 @@ async def test_generate_data_returns_text_result(mock_ai_task_entity):
 async def test_generate_data_parses_json_result(mock_ai_task_entity):
     """Structured tasks should parse the assistant text as JSON."""
     chat_log = make_chat_log(
-        [AssistantContent(content='{"answer":"ok"}', tool_calls=None)]
+        [
+            AssistantContent(
+                agent_id="ai_task.codex", content='{"answer":"ok"}', tool_calls=None
+            )
+        ]
     )
     chat_log.conversation_id = "conv-2"
     task = MagicMock(spec=ai_task_component.GenDataTask)
@@ -60,7 +77,9 @@ async def test_generate_data_parses_json_result(mock_ai_task_entity):
     async def fake_stream(request):
         yield OutputTextDelta(delta='{"answer":"ok"}', content_index=0)
 
-    with patch("custom_components.codex_conversation.ai_task.CodexClient") as MockClient:
+    with patch(
+        "custom_components.codex_conversation.ai_task.CodexClient"
+    ) as MockClient:
         MockClient.return_value.stream = fake_stream
         result = await mock_ai_task_entity._async_generate_data(task, chat_log)
 

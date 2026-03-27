@@ -3,22 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
-from datetime import date, datetime
 import json
 import logging
 from typing import Literal
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import (
-    AssistantContent,
     AssistantContentDeltaDict,
     ChatLog,
     ConversationEntity,
     ConversationInput,
     ConversationResult,
     ConverseError,
-    SystemContent,
-    ToolResultContent,
     UserContent,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
@@ -28,7 +24,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr, llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from voluptuous_openapi import convert
 
 from .codex_api import (
     CodexApiError,
@@ -56,6 +51,12 @@ from .const import (
     RECOMMENDED_TEXT_VERBOSITY,
 )
 from .oauth import CodexHAAuth
+from .transform import (
+    async_prepare_files_for_prompt,
+    build_input_items,
+    extract_instructions,
+    format_tool,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -182,81 +183,6 @@ class CodexConversationEntity(ConversationEntity):
         return conversation.async_get_result_from_chat_log(user_input, chat_log)
 
 
-# ── Request building ───────────────────────────────────────────────────────────
-
-
-def _json_default(obj: object) -> str:
-    """Fallback serialiser for types json.dumps can't handle natively."""
-    if isinstance(obj, (date, datetime)):
-        return obj.isoformat()
-    return str(obj)
-
-
-def _format_tool(tool: llm.Tool) -> dict:
-    """Format an HA LLM tool as an OpenAI Responses API function definition."""
-    return {
-        "type": "function",
-        "name": tool.name,
-        "description": tool.description or "",
-        "parameters": convert(tool.parameters),
-        "strict": False,
-    }
-
-
-def _extract_instructions(chat_log: ChatLog) -> str:
-    """Return the system instructions from the ChatLog (stable across iterations)."""
-    for content in chat_log.content:
-        if isinstance(content, SystemContent):
-            return content.content
-    return ""
-
-
-def _build_input_items(chat_log: ChatLog) -> list[dict]:
-    """Build the input items list from the ChatLog (rebuilt each iteration)."""
-    items: list[dict] = []
-
-    for content in chat_log.content:
-        if isinstance(content, SystemContent):
-            pass  # handled separately as instructions
-        elif isinstance(content, UserContent):
-            items.append(
-                {
-                    "type": "message",
-                    "role": "user",
-                    "content": [{"type": "input_text", "text": content.content}],
-                }
-            )
-        elif isinstance(content, AssistantContent):
-            if content.tool_calls:
-                for tc in content.tool_calls:
-                    items.append(
-                        {
-                            "type": "function_call",
-                            "name": tc.tool_name,
-                            "arguments": json.dumps(tc.tool_args),
-                            "call_id": tc.id,
-                        }
-                    )
-            elif content.content:
-                items.append(
-                    {
-                        "type": "message",
-                        "role": "assistant",
-                        "content": [{"type": "output_text", "text": content.content}],
-                    }
-                )
-        elif isinstance(content, ToolResultContent):
-            items.append(
-                {
-                    "type": "function_call_output",
-                    "call_id": content.tool_call_id,
-                    "output": json.dumps(content.tool_result, default=_json_default),
-                }
-            )
-
-    return items
-
-
 async def async_run_chat_log(
     *,
     chat_log: ChatLog,
@@ -271,10 +197,8 @@ async def async_run_chat_log(
     error_cls: type[Exception] = HomeAssistantError,
 ) -> None:
     """Execute a ChatLog against the Codex Responses API."""
-    tools = (
-        [_format_tool(t) for t in chat_log.llm_api.tools] if chat_log.llm_api else []
-    )
-    instructions = _extract_instructions(chat_log)
+    tools = [format_tool(t) for t in chat_log.llm_api.tools] if chat_log.llm_api else []
+    instructions = extract_instructions(chat_log)
     if instructions_suffix:
         instructions = (
             f"{instructions}\n\n{instructions_suffix}"
@@ -283,7 +207,21 @@ async def async_run_chat_log(
         )
 
     for _iteration in range(max_iterations):
-        input_items = _build_input_items(chat_log)
+        input_items = build_input_items(chat_log)
+        last_content = chat_log.content[-1]
+        if isinstance(last_content, UserContent) and last_content.attachments:
+            files = await async_prepare_files_for_prompt(
+                chat_log.hass,
+                [(a.path, a.mime_type) for a in last_content.attachments],
+            )
+            last_message = input_items[-1]
+            if (
+                last_message.get("type") == "message"
+                and last_message.get("role") == "user"
+                and isinstance(last_message.get("content"), list)
+            ):
+                last_message["content"].extend(files)
+
         request = CodexRequest(
             model=model,
             input=input_items,

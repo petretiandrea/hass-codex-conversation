@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -9,6 +10,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.codex_conversation.const import (
     DOMAIN,
+    RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
 )
 from custom_components.codex_conversation.conversation import CodexConversationEntity
@@ -47,10 +49,29 @@ def mock_oauth_session() -> MagicMock:
 @pytest.fixture
 def mock_entity(hass, mock_config_entry, mock_oauth_session) -> CodexConversationEntity:
     """A CodexConversationEntity wired to hass but not added to the entity registry."""
-    entity = CodexConversationEntity(hass, mock_config_entry, mock_oauth_session)
+    conversation_subentry = SimpleNamespace(
+        subentry_id="conversation_subentry_id",
+        title="Codex Conversation",
+        data=RECOMMENDED_CONVERSATION_OPTIONS.copy(),
+        subentry_type="conversation",
+    )
+    entity = CodexConversationEntity(
+        hass, mock_config_entry, mock_oauth_session, conversation_subentry
+    )
     entity.entity_id = f"conversation.{DOMAIN}"
     entity.hass = hass
     return entity
+
+
+@pytest.fixture
+def mock_ai_task_subentry() -> SimpleNamespace:
+    """Default AI task subentry object used by tests."""
+    return SimpleNamespace(
+        subentry_id="ai_task_subentry_id",
+        title="Codex AI Task",
+        data=RECOMMENDED_AI_TASK_OPTIONS.copy(),
+        subentry_type="ai_task_data",
+    )
 
 
 # ── ChatLog helpers ────────────────────────────────────────────────────────────

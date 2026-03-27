@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from datetime import date, datetime
 import json
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.conversation import (
     AssistantContent,
+    Attachment,
     ConverseError,
     SystemContent,
     ToolResultContent,
@@ -30,18 +32,18 @@ from custom_components.codex_conversation.codex_api import (
 from custom_components.codex_conversation.const import (
     CONF_MODEL,
     DOMAIN,
-    RECOMMENDED_CONVERSATION_OPTIONS,
 )
-from custom_components.codex_conversation.conversation import (
-    _build_input_items,
-    _extract_instructions,
-    _format_tool,
-    _json_default,
+from custom_components.codex_conversation.conversation import async_run_chat_log
+from custom_components.codex_conversation.transform import (
+    build_input_items,
+    extract_instructions,
+    format_tool,
+    json_default,
 )
 
 from .conftest import make_chat_log
 
-# ── _extract_instructions ──────────────────────────────────────────────────────
+# ── extract_instructions ───────────────────────────────────────────────────────
 
 
 def test_extract_instructions_returns_system_content():
@@ -51,12 +53,12 @@ def test_extract_instructions_returns_system_content():
             UserContent(content="Hi"),
         ]
     )
-    assert _extract_instructions(chat_log) == "You are helpful."
+    assert extract_instructions(chat_log) == "You are helpful."
 
 
 def test_extract_instructions_returns_empty_when_no_system():
     chat_log = make_chat_log([UserContent(content="Hi")])
-    assert _extract_instructions(chat_log) == ""
+    assert extract_instructions(chat_log) == ""
 
 
 def test_extract_instructions_returns_first_system_only():
@@ -66,15 +68,15 @@ def test_extract_instructions_returns_first_system_only():
             SystemContent(content="Second"),
         ]
     )
-    assert _extract_instructions(chat_log) == "First"
+    assert extract_instructions(chat_log) == "First"
 
 
-# ── _build_input_items ─────────────────────────────────────────────────────────
+# ── build_input_items ──────────────────────────────────────────────────────────
 
 
 def test_build_input_items_user_message():
     chat_log = make_chat_log([UserContent(content="Hello")])
-    items = _build_input_items(chat_log)
+    items = build_input_items(chat_log)
 
     assert len(items) == 1
     assert items[0] == {
@@ -91,7 +93,7 @@ def test_build_input_items_skips_system_content():
             UserContent(content="Hello"),
         ]
     )
-    items = _build_input_items(chat_log)
+    items = build_input_items(chat_log)
 
     assert len(items) == 1
     assert items[0]["role"] == "user"
@@ -100,10 +102,14 @@ def test_build_input_items_skips_system_content():
 def test_build_input_items_assistant_text():
     chat_log = make_chat_log(
         [
-            AssistantContent(content="I'm here to help.", tool_calls=None),
+            AssistantContent(
+                agent_id="conversation.codex",
+                content="I'm here to help.",
+                tool_calls=None,
+            ),
         ]
     )
-    items = _build_input_items(chat_log)
+    items = build_input_items(chat_log)
 
     assert len(items) == 1
     assert items[0] == {
@@ -114,16 +120,24 @@ def test_build_input_items_assistant_text():
 
 
 def test_build_input_items_assistant_empty_content_skipped():
-    chat_log = make_chat_log([AssistantContent(content=None, tool_calls=None)])
-    assert _build_input_items(chat_log) == []
+    chat_log = make_chat_log(
+        [AssistantContent(agent_id="conversation.codex", content=None, tool_calls=None)]
+    )
+    assert build_input_items(chat_log) == []
 
 
 def test_build_input_items_assistant_tool_calls():
     tool_call = llm.ToolInput(
         id="call_1", tool_name="turn_on", tool_args={"entity_id": "light.living_room"}
     )
-    chat_log = make_chat_log([AssistantContent(content=None, tool_calls=[tool_call])])
-    items = _build_input_items(chat_log)
+    chat_log = make_chat_log(
+        [
+            AssistantContent(
+                agent_id="conversation.codex", content=None, tool_calls=[tool_call]
+            )
+        ]
+    )
+    items = build_input_items(chat_log)
 
     assert len(items) == 1
     assert items[0]["type"] == "function_call"
@@ -137,8 +151,14 @@ def test_build_input_items_multiple_tool_calls():
         llm.ToolInput(id="call_1", tool_name="tool_a", tool_args={}),
         llm.ToolInput(id="call_2", tool_name="tool_b", tool_args={}),
     ]
-    chat_log = make_chat_log([AssistantContent(content=None, tool_calls=calls)])
-    items = _build_input_items(chat_log)
+    chat_log = make_chat_log(
+        [
+            AssistantContent(
+                agent_id="conversation.codex", content=None, tool_calls=calls
+            )
+        ]
+    )
+    items = build_input_items(chat_log)
 
     assert len(items) == 2
     assert items[0]["call_id"] == "call_1"
@@ -148,10 +168,15 @@ def test_build_input_items_multiple_tool_calls():
 def test_build_input_items_tool_result():
     chat_log = make_chat_log(
         [
-            ToolResultContent(tool_call_id="call_1", tool_result={"success": True}),
+            ToolResultContent(
+                agent_id="conversation.codex",
+                tool_call_id="call_1",
+                tool_name="turn_on",
+                tool_result={"success": True},
+            ),
         ]
     )
-    items = _build_input_items(chat_log)
+    items = build_input_items(chat_log)
 
     assert len(items) == 1
     assert items[0]["type"] == "function_call_output"
@@ -164,11 +189,14 @@ def test_build_input_items_tool_result_with_date_value():
     chat_log = make_chat_log(
         [
             ToolResultContent(
-                tool_call_id="c1", tool_result={"today": date(2026, 3, 3)}
+                agent_id="conversation.codex",
+                tool_call_id="c1",
+                tool_name="get_date",
+                tool_result={"today": date(2026, 3, 3)},
             ),
         ]
     )
-    items = _build_input_items(chat_log)
+    items = build_input_items(chat_log)
     output = json.loads(items[0]["output"])
     assert output["today"] == "2026-03-03"
 
@@ -180,12 +208,21 @@ def test_build_input_items_full_conversation():
         [
             SystemContent(content="System"),
             UserContent(content="What time is it?"),
-            AssistantContent(content=None, tool_calls=[tool_call]),
-            ToolResultContent(tool_call_id="c1", tool_result={"time": "15:00"}),
-            AssistantContent(content="It's 3pm.", tool_calls=None),
+            AssistantContent(
+                agent_id="conversation.codex", content=None, tool_calls=[tool_call]
+            ),
+            ToolResultContent(
+                agent_id="conversation.codex",
+                tool_call_id="c1",
+                tool_name="get_time",
+                tool_result={"time": "15:00"},
+            ),
+            AssistantContent(
+                agent_id="conversation.codex", content="It's 3pm.", tool_calls=None
+            ),
         ]
     )
-    items = _build_input_items(chat_log)
+    items = build_input_items(chat_log)
 
     types = [i["type"] for i in items]
     assert types == ["message", "function_call", "function_call_output", "message"]
@@ -193,15 +230,15 @@ def test_build_input_items_full_conversation():
     assert items[-1]["role"] == "assistant"
 
 
-# ── _json_default ──────────────────────────────────────────────────────────────
+# ── json_default ───────────────────────────────────────────────────────────────
 
 
 def test_json_default_date():
-    assert _json_default(date(2026, 3, 3)) == "2026-03-03"
+    assert json_default(date(2026, 3, 3)) == "2026-03-03"
 
 
 def test_json_default_datetime():
-    assert _json_default(datetime(2026, 3, 3, 15, 0, 0)) == "2026-03-03T15:00:00"
+    assert json_default(datetime(2026, 3, 3, 15, 0, 0)) == "2026-03-03T15:00:00"
 
 
 def test_json_default_fallback_to_str():
@@ -209,10 +246,10 @@ def test_json_default_fallback_to_str():
         def __str__(self):
             return "custom_value"
 
-    assert _json_default(Custom()) == "custom_value"
+    assert json_default(Custom()) == "custom_value"
 
 
-# ── _format_tool ───────────────────────────────────────────────────────────────
+# ── format_tool ────────────────────────────────────────────────────────────────
 
 
 def test_format_tool():
@@ -223,7 +260,7 @@ def test_format_tool():
     tool.description = "Turn on a device"
     tool.parameters = vol.Schema({vol.Required("entity_id"): str})
 
-    result = _format_tool(tool)
+    result = format_tool(tool)
 
     assert result["type"] == "function"
     assert result["name"] == "turn_on"
@@ -240,7 +277,7 @@ def test_format_tool_empty_description():
     tool.description = None
     tool.parameters = vol.Schema({})
 
-    result = _format_tool(tool)
+    result = format_tool(tool)
     assert result["description"] == ""
 
 
@@ -282,19 +319,24 @@ async def test_handle_message_simple_text(mock_entity):
 
 
 async def test_handle_message_uses_model_from_options(hass, mock_oauth_session):
-    """The CodexRequest model must come from entry.options."""
+    """The CodexRequest model must come from conversation subentry data."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id="custom_entry",
         data={"auth_implementation": DOMAIN, "token": {}},
-        options={**RECOMMENDED_CONVERSATION_OPTIONS, CONF_MODEL: "gpt-5.3-codex"},
     )
     from custom_components.codex_conversation.conversation import (
         CodexConversationEntity,
     )
 
-    entity = CodexConversationEntity(hass, entry, mock_oauth_session)
+    subentry = SimpleNamespace(
+        subentry_id="conversation_subentry_id",
+        title="Codex Conversation",
+        subentry_type="conversation",
+        data={CONF_MODEL: "gpt-5.3-codex"},
+    )
+    entity = CodexConversationEntity(hass, entry, mock_oauth_session, subentry)
     entity.entity_id = "conversation.test"
     entity.hass = hass
 
@@ -426,3 +468,45 @@ async def test_handle_message_provide_llm_data_error(mock_entity):
 
     result = await mock_entity._async_handle_message(user_input, chat_log)
     assert result is expected
+
+
+async def test_async_run_chat_log_appends_attachment_items(tmp_path):
+    """The last user message must include attachment items in the request input."""
+    image_path = tmp_path / "sample.png"
+    image_path.write_bytes(b"fake-png-data")
+
+    chat_log = make_chat_log(
+        [
+            UserContent(
+                content="Describe this image",
+                attachments=[
+                    Attachment(
+                        media_content_id="media://camera/image",
+                        mime_type="image/png",
+                        path=image_path,
+                    )
+                ],
+            )
+        ]
+    )
+
+    captured_requests: list = []
+
+    class _Client:
+        async def stream(self, request):
+            captured_requests.append(request)
+            yield OutputTextDelta(delta="done", content_index=0)
+
+    await async_run_chat_log(
+        chat_log=chat_log,
+        client=_Client(),
+        model="gpt-5.1-codex",
+        entity_id="conversation.codex",
+        reasoning_effort="medium",
+        reasoning_summary="auto",
+        text_verbosity="medium",
+    )
+
+    assert len(captured_requests) == 1
+    content = captured_requests[0].input[-1]["content"]
+    assert any(item["type"] == "input_image" for item in content)
