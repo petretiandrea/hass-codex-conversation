@@ -1,6 +1,9 @@
 {
   "name": "HA ha_integration_domain Dev Container",
-  "image": "mcr.microsoft.com/devcontainers/python:dev-3.14-bookworm",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
   "postCreateCommand": "bash .devcontainer/setup-shell.sh && bash .devcontainer/setup-git.sh && script/setup/setup",
   "postAttachCommand": "bash .devcontainer/post-attach.sh",
   "containerEnv": {
