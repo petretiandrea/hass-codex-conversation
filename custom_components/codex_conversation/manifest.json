@@ -1,11 +1,12 @@
 {
   "domain": "codex_conversation",
   "name": "OpenAI Codex Conversation",
-  "version": "0.1.0",
-  "documentation": "https://github.com/",
+  "codeowners": ["@petretiandrea"],
+  "config_flow": true,
   "dependencies": ["ai_task", "auth", "conversation"],
-  "codeowners": [],
-  "requirements": [],
+  "documentation": "https://github.com/petretiandrea/hass-codex-conversation",
+  "issue_tracker": "https://github.com/petretiandrea/hass-codex-conversation/issues",
   "iot_class": "cloud_polling",
-  "config_flow": true
+  "requirements": [],
+  "version": "0.1.0"
 }

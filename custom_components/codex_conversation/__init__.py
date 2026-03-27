@@ -5,7 +5,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
 from .const import DOMAIN
 from .oauth import CodexOAuth2Implementation
@@ -13,6 +13,7 @@ from .oauth import CodexOAuth2Implementation
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.AI_TASK, Platform.CONVERSATION]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
