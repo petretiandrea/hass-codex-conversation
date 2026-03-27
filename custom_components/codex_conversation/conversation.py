@@ -21,13 +21,13 @@ from homeassistant.components.conversation import (
     ToolResultContent,
     UserContent,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_entry_oauth2_flow, llm
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr, llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from voluptuous_openapi import convert
 
 from .codex_api import (
@@ -68,10 +68,17 @@ MAX_TOOL_ITERATIONS = 10
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     session: config_entry_oauth2_flow.OAuth2Session = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([CodexConversationEntity(hass, entry, session)])
+
+    for subentry in entry.subentries.values():
+        if subentry.subentry_type != "conversation":
+            continue
+        async_add_entities(
+            [CodexConversationEntity(hass, entry, session, subentry)],
+            config_subentry_id=subentry.subentry_id,
+        )
 
 
 # ── Entity ─────────────────────────────────────────────────────────────────────
@@ -81,7 +88,7 @@ class CodexConversationEntity(ConversationEntity):
     """Conversation agent backed by OpenAI Codex (ChatGPT subscription)."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_name = "Assist"
     _attr_supports_streaming = True
 
     def __init__(
@@ -89,30 +96,37 @@ class CodexConversationEntity(ConversationEntity):
         hass: HomeAssistant,
         entry: ConfigEntry,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
+        subentry: ConfigSubentry,
     ) -> None:
         self.hass = hass
         self._entry = entry
+        self._subentry = subentry
         self._oauth_session = oauth_session
-        self._attr_unique_id = entry.entry_id
-        if self._entry.options.get(CONF_LLM_HASS_API):
+        self._attr_unique_id = subentry.subentry_id
+        self._attr_name = subentry.title
+        self._attr_device_info = dr.DeviceInfo(
+            identifiers={(DOMAIN, subentry.subentry_id)},
+            name=subentry.title,
+            manufacturer="OpenAI",
+            model=self._options.get(CONF_MODEL, DEFAULT_MODEL),
+            entry_type=dr.DeviceEntryType.SERVICE,
+        )
+
+        if self._options.get(CONF_LLM_HASS_API):
             self._attr_supported_features = (
                 conversation.ConversationEntityFeature.CONTROL
             )
+
+    @property
+    def _options(self) -> dict:
+        """Return active options for this entity."""
+        return self._subentry.data
 
     # ── HA entity properties ───────────────────────────────────────────────────
 
     @property
     def supported_languages(self) -> list[str] | Literal["*"]:
         return MATCH_ALL
-
-    @property
-    def device_info(self) -> dict:
-        return {
-            "identifiers": {(DOMAIN, self._entry.entry_id)},
-            "name": "OpenAI Codex",
-            "manufacturer": "OpenAI",
-            "model": self._entry.options.get(CONF_MODEL, DEFAULT_MODEL),
-        }
 
     # ── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -134,14 +148,14 @@ class CodexConversationEntity(ConversationEntity):
         try:
             await chat_log.async_provide_llm_data(
                 user_input.as_llm_context(DOMAIN),
-                self._entry.options.get(CONF_LLM_HASS_API),
-                self._entry.options.get(CONF_PROMPT),
+                self._options.get(CONF_LLM_HASS_API),
+                self._options.get(CONF_PROMPT),
                 user_input.extra_system_prompt,
             )
         except ConverseError as err:
             return err.as_conversation_result()
 
-        model = self._entry.options.get(CONF_MODEL, DEFAULT_MODEL)
+        model = self._options.get(CONF_MODEL, DEFAULT_MODEL)
 
         auth = CodexHAAuth(
             session=async_get_clientsession(self.hass),
@@ -153,13 +167,13 @@ class CodexConversationEntity(ConversationEntity):
             client=client,
             model=model,
             entity_id=self.entity_id,
-            reasoning_effort=self._entry.options.get(
+            reasoning_effort=self._options.get(
                 CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
             ),
-            reasoning_summary=self._entry.options.get(
+            reasoning_summary=self._options.get(
                 CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
             ),
-            text_verbosity=self._entry.options.get(
+            text_verbosity=self._options.get(
                 CONF_TEXT_VERBOSITY, RECOMMENDED_TEXT_VERBOSITY
             ),
             error_cls=ConverseError,
@@ -257,11 +271,15 @@ async def async_run_chat_log(
     error_cls: type[Exception] = HomeAssistantError,
 ) -> None:
     """Execute a ChatLog against the Codex Responses API."""
-    tools = [_format_tool(t) for t in chat_log.llm_api.tools] if chat_log.llm_api else []
+    tools = (
+        [_format_tool(t) for t in chat_log.llm_api.tools] if chat_log.llm_api else []
+    )
     instructions = _extract_instructions(chat_log)
     if instructions_suffix:
         instructions = (
-            f"{instructions}\n\n{instructions_suffix}" if instructions else instructions_suffix
+            f"{instructions}\n\n{instructions_suffix}"
+            if instructions
+            else instructions_suffix
         )
 
     for _iteration in range(max_iterations):

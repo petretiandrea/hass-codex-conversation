@@ -16,37 +16,79 @@
       "token_exchange_failed": "Impossibile raggiungere il server di autenticazione OpenAI. Riprova."
     },
     "abort": {
-      "already_configured":    "OpenAI Codex è già configurato.",
-      "oauth_error":           "OpenAI ha restituito un errore di autenticazione. Riprova.",
+      "already_configured": "OpenAI Codex è già configurato.",
+      "oauth_error": "OpenAI ha restituito un errore di autenticazione. Riprova.",
       "token_exchange_failed": "Scambio token fallito. Riprova."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "OpenAI Codex — Impostazioni",
-        "data": {
-          "recommended": "Impostazioni modello consigliate",
-          "llm_hass_api": "API di Home Assistant",
-          "prompt": "Prompt di sistema"
-        },
-        "data_description": {
-          "prompt": "Indica al modello come rispondere. Può essere un template.",
-          "llm_hass_api": "Seleziona le API di Home Assistant da esporre al modello."
-        }
+  "config_subentries": {
+    "conversation": {
+      "abort": {
+        "entry_not_loaded": "Impossibile aggiungere elementi mentre la configurazione è disabilitata.",
+        "reconfigure_successful": "Riconfigurazione completata con successo"
       },
-      "advanced": {
-        "title": "Impostazioni avanzate",
-        "data": {
-          "model": "Modello",
-          "reasoning_effort": "Impegno nel ragionamento",
-          "reasoning_summary": "Riepilogo del ragionamento",
-          "text_verbosity": "Verbosità del testo"
+      "entry_type": "Agente di conversazione",
+      "initiate_flow": {
+        "reconfigure": "Riconfigura agente di conversazione",
+        "user": "Aggiungi agente di conversazione"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "llm_hass_api": "Controlli Home Assistant",
+            "prompt": "Istruzioni",
+            "recommended": "Impostazioni modello consigliate"
+          },
+          "data_description": {
+            "prompt": "Indica al modello come rispondere. Può essere un template.",
+            "llm_hass_api": "Seleziona le API di Home Assistant da esporre al modello."
+          }
         },
-        "data_description": {
-          "reasoning_effort": "Quanti token di ragionamento il modello deve generare prima di rispondere.",
-          "reasoning_summary": "Controlla la lunghezza e il dettaglio del riepilogo del ragionamento.",
-          "text_verbosity": "Controlla la verbosità dell'output testuale del modello."
+        "advanced": {
+          "title": "Impostazioni avanzate",
+          "data": {
+            "model": "Modello",
+            "reasoning_effort": "Impegno nel ragionamento",
+            "reasoning_summary": "Riepilogo del ragionamento",
+            "text_verbosity": "Verbosità del testo"
+          },
+          "data_description": {
+            "reasoning_effort": "Quanti token di ragionamento il modello deve generare prima di rispondere.",
+            "reasoning_summary": "Controlla la lunghezza e il dettaglio del riepilogo del ragionamento.",
+            "text_verbosity": "Controlla la verbosità dell'output testuale del modello."
+          }
+        }
+      }
+    },
+    "ai_task_data": {
+      "abort": {
+        "entry_not_loaded": "Impossibile aggiungere elementi mentre la configurazione è disabilitata.",
+        "reconfigure_successful": "Riconfigurazione completata con successo"
+      },
+      "entry_type": "Attività AI",
+      "initiate_flow": {
+        "reconfigure": "Riconfigura attività AI",
+        "user": "Aggiungi attività AI"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "recommended": "Impostazioni modello consigliate"
+          }
+        },
+        "advanced": {
+          "title": "Impostazioni avanzate",
+          "data": {
+            "model": "Modello",
+            "reasoning_effort": "Impegno nel ragionamento",
+            "reasoning_summary": "Riepilogo del ragionamento",
+            "text_verbosity": "Verbosità del testo"
+          },
+          "data_description": {
+            "reasoning_effort": "Quanti token di ragionamento il modello deve generare prima di rispondere.",
+            "reasoning_summary": "Controlla la lunghezza e il dettaglio del riepilogo del ragionamento.",
+            "text_verbosity": "Controlla la verbosità dell'output testuale del modello."
+          }
         }
       }
     }
