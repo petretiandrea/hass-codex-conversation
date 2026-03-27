@@ -86,7 +86,9 @@ async def drain_generator(entity_id, gen):
     """
     async for _ in gen:
         pass
-    return
+    # Keep this function an async generator for callers that use `async for`.
+    if False:
+        yield None
 
 
 def make_chat_log(content: list, *, llm_api=None, unresponded=False) -> MagicMock:
@@ -97,4 +99,9 @@ def make_chat_log(content: list, *, llm_api=None, unresponded=False) -> MagicMoc
     chat_log.content = content
     chat_log.llm_api = llm_api
     chat_log.unresponded_tool_results = unresponded
+    chat_log.hass = SimpleNamespace(
+        async_add_executor_job=AsyncMock(
+            side_effect=lambda target, *args: target(*args)
+        )
+    )
     return chat_log

@@ -21,7 +21,12 @@ from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr, llm
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    device_registry as dr,
+    intent,
+    llm,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -246,6 +251,12 @@ async def async_run_chat_log(
             CodexServerOverloaded,
         ) as err:
             _LOGGER.error("Codex error: %s", err)
+            if error_cls is ConverseError:
+                raise ConverseError(
+                    str(err),
+                    chat_log.conversation_id or "",
+                    intent.IntentResponse(language="en"),
+                ) from err
             raise error_cls(str(err)) from err
 
         if not chat_log.unresponded_tool_results:

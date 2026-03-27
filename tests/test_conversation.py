@@ -389,6 +389,8 @@ async def test_handle_message_api_errors_raise_converse_error(
 
     async def error_stream(request):
         raise error_cls(*args)
+        if False:
+            yield None
 
     with patch(
         "custom_components.codex_conversation.conversation.CodexClient"
@@ -453,10 +455,10 @@ async def test_handle_message_tool_call_loop(mock_entity):
 
 async def test_handle_message_provide_llm_data_error(mock_entity):
     """If async_provide_llm_data raises ConverseError, return its result directly."""
-    from homeassistant.components.conversation import ConverseError
+    from homeassistant.helpers import intent
 
     expected = MagicMock()
-    err = ConverseError("llm error")
+    err = ConverseError("llm error", "conv-1", intent.IntentResponse(language="en"))
     err.as_conversation_result = MagicMock(return_value=expected)
 
     chat_log = make_chat_log([UserContent(content="Hi")])
