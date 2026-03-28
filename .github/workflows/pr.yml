@@ -1,0 +1,17 @@
+name: PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  lint:
+    uses: ./.github/workflows/lint.yml
+
+  tests:
+    uses: ./.github/workflows/tests.yml
+
+  validate:
+    uses: ./.github/workflows/validate.yml

@@ -1,9 +1,8 @@
 name: Release
 
 on:
-  workflow_run:
-    workflows: [Tests]
-    types: [completed]
+  workflow_dispatch:
+  push:
     branches: [main]
 
 permissions:
@@ -11,13 +10,19 @@ permissions:
   id-token: write
 
 jobs:
+  lint:
+    uses: ./.github/workflows/lint.yml
+
+  tests:
+    uses: ./.github/workflows/tests.yml
+
+  validate:
+    uses: ./.github/workflows/validate.yml
+
   release:
     name: Semantic Release
     runs-on: ubuntu-latest
-    # Only release when CI passed on a push to main (not on PRs)
-    if: |
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push'
+    needs: [lint, tests, validate]
 
     concurrency:
       group: release
@@ -38,7 +43,7 @@ jobs:
         run: uv python install 3.13
 
       - name: Install python-semantic-release
-        run: uv tool install python-semantic-release
+        run: uv tool install python-semantic-release==10.5.3
 
       - name: Configure git
         run: |
@@ -50,11 +55,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # Exit code 2 means "no release needed" — treat as success, skip publish
-        run: uv tool run semantic-release version
+        run: uv tool run --from python-semantic-release semantic-release version
         continue-on-error: true
 
       - name: Semantic Release — publish
         if: steps.version.outcome == 'success'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: uv tool run semantic-release publish
+        run: uv tool run --from python-semantic-release semantic-release publish
