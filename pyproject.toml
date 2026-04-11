@@ -11,7 +11,7 @@ dev = [
     { include-group = "test" },
     "homeassistant==2026.3.4",
     "hassil>=3.5.0",
-    "home-assistant-intents>=2026.3.3",
+    "home-assistant-intents>=2026.3.24",
     "aiodiscover>=1.6.0",
     "pre-commit",
     "ruff>=0.9.0",
