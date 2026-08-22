@@ -5,16 +5,6 @@ from homeassistant.helpers import llm
 
 DOMAIN = "codex_conversation"
 
-MODELS = [
-    "gpt-5.1-codex",
-    "gpt-5.2-codex",
-    "gpt-5.3-codex",
-    "gpt-5.4-codex",
-    "gpt-5.4-mini",
-    "gpt-5.5-codex",
-    "gpt-5.1-codex-mini",
-]
-
 # Options keys
 CONF_MODEL = "model"
 CONF_RECOMMENDED = "recommended"

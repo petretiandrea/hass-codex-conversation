@@ -52,24 +52,21 @@ This integration reuses the same authenticated Codex backend flow and exposes it
    ```
 
 4. Open the URL in your browser, log in with your ChatGPT account, and enter the code.
-5. Approve the login and complete the integration setup.
+5. Approve the login, choose one of the models available to your account, and
+   complete the integration setup.
 
 ## Configuration
 
-After setup, you can change options from **Settings -> Devices & Services -> OpenAI Codex Conversation -> Configure**.
+After setup, reconfigure a conversation agent or AI task from **Settings ->
+Devices & Services -> OpenAI Codex Conversation**. The model list is fetched
+from the signed-in OpenAI account whenever a setup or reconfiguration form
+opens, so newly released models appear without an integration update. If a
+configured model is retired, reconfiguration selects the first currently
+available model so it can be replaced.
 
 | Option | Description | Default |
 | --- | --- | --- |
-| Model | Codex model used for the conversation agent | `gpt-5.1-codex` |
-
-### Available Models
-
-| Model | Notes |
-| --- | --- |
-| `gpt-5.1-codex` | Balanced speed and reasoning |
-| `gpt-5.2-codex` | More capable reasoning |
-| `gpt-5.3-codex` | Most capable |
-| `gpt-5.1-codex-mini` | Faster and lighter |
+| Model | Codex model used for the conversation agent or AI task | First available account model |
 
 ## How It Works
 

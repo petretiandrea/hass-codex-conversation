@@ -7,13 +7,22 @@
       },
       "activate": {
         "title": "OpenAI Codex — Authorize"
+      },
+      "model": {
+        "title": "Choose a Codex model",
+        "description": "Models are loaded from the signed-in OpenAI account each time this form opens.",
+        "data": {
+          "model": "Model"
+        }
       }
     },
     "progress": {
       "waiting_for_auth": "Open the following URL in your browser and sign in with your OpenAI account (ChatGPT Plus or Pro required):\n\n[{url}]({url})\n\nIf the page asks for a code, enter:\n\n```{code}```\n\nThis dialog will advance automatically once authorized."
     },
     "error": {
-      "token_exchange_failed": "Could not reach the OpenAI authorisation server. Please try again."
+      "token_exchange_failed": "Could not reach the OpenAI authorisation server. Please try again.",
+      "models_fetch_failed": "Could not load the models available to this OpenAI account. Please try again.",
+      "invalid_model": "The selected model is no longer available. Choose another model."
     },
     "abort": {
       "already_configured": "OpenAI Codex is already configured.",
@@ -23,6 +32,10 @@
   },
   "config_subentries": {
     "conversation": {
+      "error": {
+        "models_fetch_failed": "Could not load the models available to this OpenAI account. Please try again.",
+        "invalid_model": "The selected model is no longer available. Choose another model."
+      },
       "abort": {
         "entry_not_loaded": "Cannot add things while the configuration is disabled.",
         "reconfigure_successful": "Reconfiguration was successful"
@@ -35,6 +48,7 @@
       "step": {
         "init": {
           "data": {
+            "model": "Model",
             "llm_hass_api": "Home Assistant controls",
             "prompt": "Instructions",
             "recommended": "Recommended model settings"
@@ -61,6 +75,10 @@
       }
     },
     "ai_task_data": {
+      "error": {
+        "models_fetch_failed": "Could not load the models available to this OpenAI account. Please try again.",
+        "invalid_model": "The selected model is no longer available. Choose another model."
+      },
       "abort": {
         "entry_not_loaded": "Cannot add things while the configuration is disabled.",
         "reconfigure_successful": "Reconfiguration was successful"
@@ -73,6 +91,7 @@
       "step": {
         "init": {
           "data": {
+            "model": "Model",
             "recommended": "Recommended model settings"
           }
         },

@@ -35,13 +35,13 @@ from .const import (
     CONF_TEXT_VERBOSITY,
     DEFAULT_MODEL,
     DOMAIN,
-    MODELS,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_TEXT_VERBOSITY,
 )
+from .model_catalog import async_fetch_model_catalog
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +56,7 @@ class CodexConversationConfigFlow(ConfigFlow, domain=DOMAIN):
         self._user_code: str = ""
         self._auth_task: asyncio.Task[OAuthToken] | None = None
         self._token: OAuthToken | None = None
+        self._model_options: list[dict[str, str]] | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -104,25 +105,82 @@ class CodexConversationConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Device code flow failed")
             return self.async_abort(reason="oauth_error")
 
-        return self.async_show_progress_done(next_step_id="finish")
+        return self.async_show_progress_done(next_step_id="model")
 
-    async def async_step_finish(
+    async def async_step_model(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Create entry with auth data only and default subentries."""
+        """Select an account-available model and create the config entry."""
+        errors: dict[str, str] = {}
+        await self._async_load_model_options(errors)
+
+        if user_input is not None and self._model_options is not None:
+            selected_model = user_input[CONF_MODEL]
+            if selected_model not in _option_values(self._model_options):
+                errors["base"] = "invalid_model"
+            else:
+                conversation_options = {
+                    **RECOMMENDED_CONVERSATION_OPTIONS,
+                    CONF_MODEL: selected_model,
+                }
+                ai_task_options = {
+                    **RECOMMENDED_AI_TASK_OPTIONS,
+                    CONF_MODEL: selected_model,
+                }
+                return self._async_create_codex_entry(
+                    conversation_options, ai_task_options
+                )
+
+        options = self._model_options or _fallback_model_options()
+        return self.async_show_form(
+            step_id="model",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_MODEL,
+                        default=_selected_or_first(DEFAULT_MODEL, options),
+                    ): SelectSelector(SelectSelectorConfig(options=options))
+                }
+            ),
+            errors=errors,
+        )
+
+    async def _async_load_model_options(self, errors: dict[str, str]) -> None:
+        """Load model choices once for this config-flow step."""
+        if self._model_options is not None:
+            return
+        if self._token is None:
+            errors["base"] = "models_fetch_failed"
+            return
+        try:
+            self._model_options = await async_fetch_model_catalog(
+                async_get_clientsession(self.hass),
+                access_token=self._token.access_token,
+                account_id=self._token.account_id,
+            )
+        except Exception:
+            _LOGGER.exception("Failed to fetch available Codex models")
+            errors["base"] = "models_fetch_failed"
+
+    def _async_create_codex_entry(
+        self,
+        conversation_options: dict[str, Any],
+        ai_task_options: dict[str, Any],
+    ) -> ConfigFlowResult:
+        """Create the authenticated entry and its default subentries."""
         return self.async_create_entry(
             title="OpenAI Codex",
             data={"auth_implementation": DOMAIN, "token": self._token.as_dict()},
             subentries=[
                 {
                     "subentry_type": "conversation",
-                    "data": RECOMMENDED_CONVERSATION_OPTIONS,
+                    "data": conversation_options,
                     "title": "Codex Conversation",
                     "unique_id": None,
                 },
                 {
                     "subentry_type": "ai_task_data",
-                    "data": RECOMMENDED_AI_TASK_OPTIONS,
+                    "data": ai_task_options,
                     "title": "Codex AI Task",
                     "unique_id": None,
                 },
@@ -146,6 +204,7 @@ class _BaseCodexSubentryFlow(ConfigSubentryFlow):
 
     options: dict[str, Any]
     _init_data: dict[str, Any]
+    _model_options: list[dict[str, str]] | None
 
     @property
     def _is_new(self) -> bool:
@@ -168,6 +227,7 @@ class _BaseCodexSubentryFlow(ConfigSubentryFlow):
         """Handle creation of a new subentry."""
         self.options = self._default_data.copy()
         self._init_data = {}
+        self._model_options = None
         return await self.async_step_init()
 
     async def async_step_reconfigure(
@@ -176,6 +236,7 @@ class _BaseCodexSubentryFlow(ConfigSubentryFlow):
         """Handle reconfiguration of an existing subentry."""
         self.options = self._get_reconfigure_subentry().data.copy()
         self._init_data = {}
+        self._model_options = None
         return await self.async_step_init()
 
     async def async_step_init(
@@ -186,19 +247,35 @@ class _BaseCodexSubentryFlow(ConfigSubentryFlow):
             return self.async_abort(reason="entry_not_loaded")
 
         options = self.options
+        errors: dict[str, str] = {}
+        await self._async_load_model_options(errors)
 
-        if user_input is not None:
-            if user_input[CONF_RECOMMENDED]:
-                data = self._default_data.copy()
+        if user_input is not None and self._model_options is not None:
+            if user_input[CONF_MODEL] not in _option_values(self._model_options):
+                errors["base"] = "invalid_model"
+            elif user_input[CONF_RECOMMENDED]:
+                data = {
+                    **self._default_data,
+                    CONF_MODEL: user_input[CONF_MODEL],
+                }
                 if self._supports_prompt_and_apis:
                     data[CONF_PROMPT] = user_input.get(
                         CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
                     )
                     data[CONF_LLM_HASS_API] = user_input.get(CONF_LLM_HASS_API) or []
                 return self._finalize_subentry(data)
+            else:
+                self._init_data = user_input
+                return await self.async_step_advanced()
 
-            self._init_data = user_input
-            return await self.async_step_advanced()
+        model_options = self._model_options or _fallback_model_options(
+            options.get(CONF_MODEL)
+        )
+        model_selector = SelectSelector(SelectSelectorConfig(options=model_options))
+        model_field = vol.Required(
+            CONF_MODEL,
+            default=_selected_or_first(options.get(CONF_MODEL), model_options),
+        )
 
         if self._supports_prompt_and_apis:
             hass_apis = [
@@ -206,6 +283,7 @@ class _BaseCodexSubentryFlow(ConfigSubentryFlow):
                 for api in llm.async_get_apis(self.hass)
             ]
             step_schema: dict = {
+                model_field: model_selector,
                 vol.Optional(
                     CONF_PROMPT,
                     description={
@@ -224,13 +302,34 @@ class _BaseCodexSubentryFlow(ConfigSubentryFlow):
             }
         else:
             step_schema = {
+                model_field: model_selector,
                 vol.Required(
                     CONF_RECOMMENDED,
                     default=options.get(CONF_RECOMMENDED, True),
                 ): bool,
             }
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(step_schema))
+        return self.async_show_form(
+            step_id="init", data_schema=vol.Schema(step_schema), errors=errors
+        )
+
+    async def _async_load_model_options(self, errors: dict[str, str]) -> None:
+        """Refresh account-available models when the subentry form opens."""
+        if self._model_options is not None:
+            return
+        entry = self._get_entry()
+        oauth_session = self.hass.data[DOMAIN][entry.entry_id]
+        try:
+            await oauth_session.async_ensure_token_valid()
+            token = oauth_session.token
+            self._model_options = await async_fetch_model_catalog(
+                async_get_clientsession(self.hass),
+                access_token=token["access_token"],
+                account_id=token.get("account_id", ""),
+            )
+        except Exception:
+            _LOGGER.exception("Failed to fetch available Codex models")
+            errors["base"] = "models_fetch_failed"
 
     async def async_step_advanced(
         self, user_input: dict[str, Any] | None = None
@@ -246,10 +345,6 @@ class _BaseCodexSubentryFlow(ConfigSubentryFlow):
             step_id="advanced",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_MODEL,
-                        default=options.get(CONF_MODEL, DEFAULT_MODEL),
-                    ): SelectSelector(SelectSelectorConfig(options=list(MODELS))),
                     vol.Required(
                         CONF_REASONING_EFFORT,
                         default=options.get(
@@ -314,3 +409,20 @@ class CodexAITaskSubentryFlow(_BaseCodexSubentryFlow):
     @property
     def _default_data(self) -> dict[str, Any]:
         return RECOMMENDED_AI_TASK_OPTIONS
+
+
+def _option_values(options: list[dict[str, str]]) -> set[str]:
+    """Return the values from Home Assistant select options."""
+    return {option["value"] for option in options}
+
+
+def _selected_or_first(selected: str | None, options: list[dict[str, str]]) -> str:
+    """Keep a configured model when available, otherwise choose the first model."""
+    values = _option_values(options)
+    return selected if selected in values else options[0]["value"]
+
+
+def _fallback_model_options(selected: str | None = None) -> list[dict[str, str]]:
+    """Build temporary choices while a failed catalog request is retried."""
+    model = selected or DEFAULT_MODEL
+    return [{"value": model, "label": model}]
